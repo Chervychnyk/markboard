@@ -1,0 +1,440 @@
+// State, persistence and actions. Components read `app`/`data`/`ui` and re-render on change.
+import { SvelteSet } from 'svelte/reactivity';
+import { DEFAULTS, flatten, LOOK_DEFAULTS, newWorkspace, normalizeWorkspace, sanitize } from './core.ts';
+import { form, toast } from './dialogs.svelte.ts';
+import { initLang, locale, t } from './i18n.ts';
+import type { BNode, Data, Look, Meta, Row, TrashEntry, Workspace } from './types.ts';
+import { WIDGETS } from './widgets.ts';
+
+export const COLORS = ['', 'red', 'orange', 'green', 'blue', 'purple'];
+export const THEMES = ['system', 'light', 'dark', 'black'];
+export const ACCENTS = ['#4f46e5', '#0090ff', '#30a46c', '#f76b15', '#e5484d'];
+export const FONTS: Record<string, string> = { system: 'system-ui, sans-serif', serif: 'Georgia, serif', mono: 'ui-monospace, Menlo, monospace', rounded: 'ui-rounded, system-ui, sans-serif' };
+export const FONT_NAMES: Record<string, string> = { system: 'Sans', serif: 'Serif', mono: 'Mono', rounded: 'Rounded' };
+export const PRESET_NAMES: Record<string, string> = { dusk: 'Dusk', ocean: 'Ocean', forest: 'Forest', ember: 'Ember', carbon: 'Carbon' };
+export const PRESETS: Record<string, [string, string]> = { dusk: ['#1e1b4b', '#be185d'], ocean: ['#0c4a6e', '#14b8a6'], forest: ['#052e16', '#65a30d'], ember: ['#0c0a09', '#9f1239'], carbon: ['#09090b', '#3f3f46'] };
+export const TRASH_DAYS = 7;
+export const HEX = /^#[0-9a-f]{6}$/i;
+export const DATA_IMG = /^data:image\/[\w+.-]+;base64,[\w+/=]+$/;
+
+/** Persisted state; mutate in place, then save()/saveWs(). */
+export const app = $state<Data>(structuredClone(DEFAULTS));
+
+class Bookmarks {
+  tree = $state.raw<BNode>({ id: '0', title: '', children: [] } as unknown as BNode);
+  bar = $state.raw<BNode>({ id: '1', title: '', children: [] } as unknown as BNode);
+  flat = $state.raw<BNode[]>([]);
+  byId = $state.raw(new Map<string, BNode>());
+  recent = $state.raw<BNode[]>([]);
+  top = $state.raw<Row[]>([]);
+}
+/** The browser's bookmarks, re-read on every change. */
+export const data = new Bookmarks();
+
+/** Per-tab UI state. `view` is the folder id shown as a gallery (the URL hash). */
+export const ui = $state({ view: location.hash.slice(1) || null, sort: 'manual', selecting: false, selected: new SvelteSet<string>() });
+
+export const save = (...keys: (keyof Data)[]) =>
+  browser.storage.local.set(Object.fromEntries(keys.map((k) => [k, $state.snapshot(app[k])])));
+export const saveWs = () => save('workspaces', 'ws');
+
+export const ws = (): Workspace => app.workspaces[app.ws]!;
+export const look = (): Look => ({ ...LOOK_DEFAULTS, ...ws().look });
+export const wsRoot = () => data.byId.get(ws().root ?? '') ?? data.bar;
+export const metaOf = (n: Row): Meta => (n.id && app.meta[n.id]) || {};
+
+/** Fills what old or imported workspaces lack; the current one must exist. Not during render: it writes state. */
+function normalize() {
+  if (!Object.keys(app.workspaces).length) app.workspaces = structuredClone(DEFAULTS.workspaces);
+  for (const [id, w] of Object.entries(app.workspaces)) app.workspaces[id] = normalizeWorkspace($state.snapshot(w), t('Notes'));
+  if (!app.workspaces[app.ws]) app.ws = Object.keys(app.workspaces)[0]!;
+}
+
+export async function init() {
+  const stored = await browser.storage.local.get(null);
+  initLang(stored.lang as string | undefined);
+  // Older versions kept the look globally and notes as one string.
+  const ws0 = Object.values((stored.workspaces ?? {}) as Record<string, Partial<Workspace>>);
+  for (const k of ['theme', 'accent', 'font', 'bg'] as const) {
+    if (!(k in stored)) continue;
+    for (const w of ws0) {
+      w.look ??= {};
+      if (k === 'bg') { if (stored.bg) Object.assign(w.look, { bgImage: stored.bg, bgKind: 'photo' }); } else (w.look as Record<string, unknown>)[k] ??= stored[k];
+    }
+    delete stored[k];
+    browser.storage.local.remove(k);
+  }
+  const oldNotes = typeof stored.notes === 'string' ? stored.notes : null;
+  delete stored.notes;
+  Object.assign(app, stored);
+  normalize();
+  if (oldNotes !== null) {
+    ws().notes.unshift({ id: crypto.randomUUID(), title: t('Notes'), text: oldNotes, checklist: [] });
+    browser.storage.local.remove('notes');
+  }
+  app.trash = app.trash.filter((x) => Date.now() - x.at < TRASH_DAYS * 864e5);
+  save('trash', 'workspaces', 'ws');
+}
+
+export async function refresh() {
+  const [tree] = await browser.bookmarks.getTree();
+  const flat = flatten(tree!.children ?? []);
+  [data.recent, data.top] = await Promise.all([browser.bookmarks.getRecent(12), browser.topSites.get()]);
+  data.tree = tree!;
+  data.bar = tree!.children![0]!;
+  data.flat = flat;
+  data.byId = new Map(flat.map((n) => [n.id, n]));
+}
+
+export const open = (id: string | null) => { location.hash = id ?? ''; };
+export const isDue = (m: Meta) => !!m.remind && new Date(m.remind).getTime() <= Date.now();
+export const folderOptions = (): [string, string][] => data.flat.filter((n) => !n.url)
+  .map((f) => [f.id, (data.byId.get(f.parentId!) ? data.byId.get(f.parentId!)!.title + ' › ' : '') + f.title]);
+
+export function setMeta(id: string, patch: Meta) {
+  app.meta[id] = { ...app.meta[id], ...patch };
+  save('meta');
+}
+
+export async function edit(n: BNode) {
+  const m = app.meta[n.id] ?? {};
+  const v = await form(n.url ? t('Edit bookmark') : t('Edit folder'), [
+    { name: 'title', label: t('Title'), value: n.title },
+    ...(n.url ? [{ name: 'url', label: t('URL'), type: 'url', value: n.url, required: true }] : []),
+    { name: 'folder', label: t('Folder'), type: 'select', value: n.parentId, options: folderOptions().filter(([id]) => id !== n.id) },
+    { name: 'tags', label: t('Tags (comma separated)'), value: (m.tags ?? []).join(', ') },
+    { name: 'comment', label: t('Comment (shown on hover)'), type: 'textarea', value: m.comment },
+    { name: 'icon', label: t('Custom icon (emoji or character)'), value: m.icon, maxlength: 8 },
+    { name: 'remind', label: t('Remind me at'), type: 'datetime-local', value: m.remind },
+    { name: 'pinned', label: t('Pin to the top bar'), type: 'checkbox', value: m.pinned },
+    { name: 'hidden', label: t('Hide from the board'), type: 'checkbox', value: m.hidden },
+  ]);
+  if (!v) return;
+  try {
+    await browser.bookmarks.update(n.id, n.url ? { title: v.title, url: v.url } : { title: v.title });
+    if (v.folder !== n.parentId) await browser.bookmarks.move(n.id, { parentId: v.folder });
+  } catch (e) {
+    return toast((e as Error).message);
+  }
+  const alarm = `remind:${n.id}`;
+  if (v.remind) browser.alarms.create(alarm, { when: new Date(v.remind).getTime() });
+  else browser.alarms.clear(alarm);
+  setMeta(n.id, {
+    tags: v.tags.split(',').map((tag: string) => tag.trim().replace(/^#/, '')).filter(Boolean),
+    comment: v.comment, icon: v.icon, remind: v.remind, pinned: v.pinned, hidden: v.hidden,
+  });
+}
+
+/** Drop on an item inserts before it; drop on empty space appends. */
+export async function dropBookmark(e: DragEvent, parentId: string) {
+  const id = e.dataTransfer?.getData('text/bookmark');
+  if (!id) return;
+  const target = (e.target as Element).closest<HTMLElement>('.item')?.dataset.id;
+  const opts: { parentId: string; index?: number } = { parentId };
+  if (target && target !== id) {
+    const [before] = await browser.bookmarks.get(target);
+    if (before!.parentId === parentId) opts.index = before!.index;
+  }
+  browser.bookmarks.move(id, opts).catch((err) => toast(err.message));
+}
+
+// --- trash ---
+
+export async function removeMany(ids: string[]) {
+  const entries: TrashEntry[] = [];
+  for (const id of ids) {
+    const [node] = await browser.bookmarks.getSubTree(id).catch(() => []); // gone already if an ancestor was selected too
+    if (!node) continue;
+    await browser.bookmarks.removeTree(id);
+    entries.push({ node, at: Date.now() });
+  }
+  if (!entries.length) return;
+  app.trash.unshift(...entries);
+  save('trash');
+  const what = entries.length === 1 ? t('Moved “{0}” to trash', entries[0]!.node.title || entries[0]!.node.url) : t('Moved to trash: {0}', entries.length);
+  toast(what, t('Undo'), async () => { for (const e of [...entries].reverse()) await untrash(e); });
+}
+
+export async function untrash(entry: TrashEntry) {
+  const { node } = entry;
+  const parentOk = await browser.bookmarks.get(node.parentId!).then(() => true, () => false);
+  await restore(node, parentOk ? node.parentId! : wsRoot().id, parentOk ? node.index : undefined);
+  app.trash = app.trash.filter((x) => x.at !== entry.at || x.node.id !== entry.node.id);
+  save('trash');
+}
+
+async function restore(n: BNode, parentId: string, index?: number) {
+  const made = await browser.bookmarks.create({ parentId, index, title: n.title, url: n.url })
+    .catch(() => browser.bookmarks.create({ parentId, title: n.title, url: n.url })); // index may be out of range now
+  if (app.meta[n.id]) setMeta(made.id, $state.snapshot(app.meta[n.id]!));
+  for (const c of n.children ?? []) await restore(c, made.id);
+}
+
+export function emptyTrash() {
+  app.trash = [];
+  save('trash');
+  toast(t('Trash emptied'));
+}
+
+// --- duplicates ---
+
+export function duplicateGroups() {
+  const groups = new Map<string, BNode[]>();
+  for (const n of data.flat) if (n.url) {
+    const k = n.url.replace(/\/$/, '');
+    groups.set(k, [...(groups.get(k) ?? []), n]);
+  }
+  return [...groups.values()].filter((g) => g.length > 1).map((g) => g.sort((a, b) => (a.dateAdded ?? 0) - (b.dateAdded ?? 0)));
+}
+
+/** Keeps the oldest copy of each link and carries tags, favorites, pins and comments over to it. */
+export async function dedupe(groups: BNode[][]) {
+  for (const g of groups) {
+    const metas = g.map((n) => app.meta[n.id]).filter((m): m is Meta => !!m).map((m) => $state.snapshot(m));
+    if (!metas.length) continue;
+    app.meta[g[0]!.id] = {
+      ...Object.assign({}, ...[...metas].reverse()), // the kept copy's own color/icon win
+      tags: [...new Set(metas.flatMap((m) => m.tags ?? []))],
+      fav: metas.some((m) => m.fav),
+      pinned: metas.some((m) => m.pinned),
+      comment: [...new Set(metas.map((m) => m.comment).filter(Boolean))].join('\n'),
+    };
+  }
+  save('meta');
+  await removeMany(groups.flatMap((g) => g.slice(1).map((n) => n.id)));
+}
+
+// --- selection ---
+
+export function toggleSelect() {
+  ui.selecting = !ui.selecting;
+  ui.selected.clear();
+}
+
+export const toggleSel = (id: string) => (ui.selected.has(id) ? ui.selected.delete(id) : ui.selected.add(id));
+
+export function bulkMeta(nodes: BNode[], patch: Meta) {
+  for (const n of nodes) app.meta[n.id] = { ...app.meta[n.id], ...patch };
+  save('meta');
+}
+
+// --- tabs & sessions ---
+
+/** The window's web tabs. permissions.request needs a user gesture, which a command run from Tabkit lacks:
+ *  then a toast asks, and its button (a real click) retries. */
+async function openTabs(retry: () => void) {
+  const ok = await browser.permissions.request({ permissions: ['tabs'] }).catch(() => null);
+  if (ok === null) return void toast(t('Markboard needs access to your tabs'), t('Allow'), retry);
+  if (!ok) return null;
+  return (await browser.tabs.query({ currentWindow: true }))
+    .filter((tab) => /^https?:/.test(tab.url ?? ''))
+    .map((tab) => ({ title: tab.title ?? '', url: tab.url! }));
+}
+
+export async function saveTabs() {
+  const tabs = await openTabs(saveTabs);
+  if (!tabs) return;
+  const folder = await browser.bookmarks.create({ parentId: wsRoot().id, title: `${t('Tabs')} ${new Date().toLocaleString(locale)}` });
+  for (const tab of tabs) await browser.bookmarks.create({ parentId: folder.id, ...tab });
+  toast(t('Tabs saved: {0} → “{1}”', tabs.length, folder.title));
+}
+
+export async function saveSession() {
+  const tabs = await openTabs(saveSession);
+  if (!tabs) return;
+  const v = await form(t('Save session'), [{ name: 'name', label: t('Name'), value: new Date().toLocaleString(locale), required: true }]);
+  if (!v) return;
+  app.sessions.unshift({ name: v.name, at: Date.now(), tabs });
+  save('sessions');
+  toast(t('Session saved: “{0}” ({1})', v.name, tabs.length));
+}
+
+export function deleteSession(i: number) {
+  const s = $state.snapshot(app.sessions[i]!);
+  app.sessions.splice(i, 1);
+  save('sessions');
+  toast(t('Deleted session “{0}”', s.name), t('Undo'), () => { app.sessions.splice(i, 0, s); save('sessions'); });
+}
+
+export function openAll(folderId: string) {
+  const urls = (data.byId.get(folderId)?.children ?? []).filter((n) => n.url).map((n) => n.url!);
+  if (!urls.length) return toast(t('No links in this folder'));
+  for (const url of urls) browser.tabs.create({ url, active: false });
+}
+
+// --- notes ---
+
+export function newNote() {
+  const id = crypto.randomUUID();
+  ws().notes.push({ id, title: t('Note'), text: '', checklist: [] });
+  saveWs();
+  setTimeout(() => document.querySelector<HTMLElement>(`[data-key="note:${id}"] textarea`)?.focus(), 50); // after the re-render
+}
+
+export function deleteNote(id: string) {
+  const notes = ws().notes, i = notes.findIndex((n) => n.id === id);
+  if (i < 0) return;
+  const note = $state.snapshot(notes[i]!);
+  notes.splice(i, 1);
+  saveWs();
+  toast(t('Deleted note “{0}”', ws().colNames['note:' + id] || note.title), t('Undo'), () => { notes.splice(i, 0, note); saveWs(); });
+}
+
+// --- gallery ---
+
+export async function bulkRename() {
+  const folder = data.byId.get(ui.view ?? '');
+  if (!folder) return;
+  const v = await form(t('Bulk rename in this folder'), [
+    { name: 'find', label: t('Find'), required: true },
+    { name: 'replace', label: t('Replace with') },
+    { name: 'regex', label: t('Regular expression ($1 etc. allowed in replacement)'), type: 'checkbox' },
+  ]);
+  if (!v) return;
+  let re: RegExp;
+  try { re = new RegExp(v.regex ? v.find : v.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'); } catch { return toast(t('Invalid regular expression')); }
+  const changed: [string, string][] = [];
+  for (const k of folder.children ?? []) {
+    const title = v.regex ? k.title.replace(re, v.replace) : k.title.replace(re, () => v.replace);
+    if (title !== k.title) { await browser.bookmarks.update(k.id, { title }); changed.push([k.id, k.title]); }
+  }
+  toast(t('Renamed: {0}', changed.length), changed.length ? t('Undo') : null,
+    async () => { for (const [id, title] of changed) await browser.bookmarks.update(id, { title }); });
+}
+
+// --- backups & templates ---
+
+export function snapshot(): Partial<Data> {
+  const out = $state.snapshot(app) as Partial<Data> & Pick<Data, 'meta'>;
+  delete out.backups;
+  // Keep URLs next to meta so it can be re-attached on another machine, where bookmark ids differ.
+  for (const [id, m] of Object.entries(out.meta)) if (data.byId.get(id)?.url) m.url = data.byId.get(id)!.url;
+  return out;
+}
+
+function remapMeta(meta: Record<string, Meta>) {
+  const byUrl = new Map(data.flat.filter((n) => n.url).map((n) => [n.url!, n.id]));
+  return Object.fromEntries(Object.entries(meta).map(([id, m]) =>
+    [m?.url && data.byId.get(id)?.url !== m.url && byUrl.has(m.url) ? byUrl.get(m.url)! : id, m]));
+}
+
+export async function applyData(input: unknown) {
+  let clean: Partial<Data>;
+  try { clean = sanitize(input); } catch { return toast(t('That file is not a Markboard backup')); }
+  const before = snapshot();
+  if (clean.meta) clean.meta = remapMeta(clean.meta);
+  Object.assign(app, clean);
+  normalize();
+  await save(...(Object.keys(clean) as (keyof Data)[]), 'workspaces', 'ws');
+  toast(t('Backup restored'), t('Undo'), () => applyData(before));
+}
+
+export function exportData() {
+  const blob = new Blob([JSON.stringify(snapshot(), null, 2)], { type: 'application/json' });
+  Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob), download: `markboard-backup-${new Date().toISOString().slice(0, 10)}.json`,
+  }).click();
+}
+
+type Template = {
+  template?: string;
+  folders?: { title?: string; links?: { title?: string; url?: string; comment?: string }[] }[];
+  workspace?: { name?: string; look?: object; widgets?: Record<string, unknown>[]; notes?: { title?: string; text?: string; checklist?: string[] }[]; hiddenCols?: unknown[] };
+};
+
+/** Templates create real bookmark folders (under Other bookmarks) plus a workspace showing them. */
+export async function applyTemplate(tpl: Template) {
+  const w = tpl?.workspace;
+  if (tpl?.template !== 'markboard' || typeof w !== 'object' || !Array.isArray(tpl.folders)) return toast(t('That file is not a Markboard template'));
+  const str = (v: unknown, max = 2000) => String(v ?? '').slice(0, max);
+  const arr = <T,>(v: T[] | undefined) => (Array.isArray(v) ? v : []);
+  const rootFolder = await browser.bookmarks.create({ parentId: data.tree.children![1]!.id, title: str(w.name, 100) || t('Template') });
+  for (const f of tpl.folders) {
+    const folder = await browser.bookmarks.create({ parentId: rootFolder.id, title: str(f?.title, 100) });
+    for (const l of arr(f?.links)) {
+      if (!/^https?:\/\//.test(l?.url ?? '')) continue;
+      const b = await browser.bookmarks.create({ parentId: folder.id, title: str(l.title, 300) || l.url, url: l.url });
+      if (l.comment) app.meta[b.id] = { comment: str(l.comment) };
+    }
+  }
+  const id = crypto.randomUUID();
+  const lookIn = typeof w.look === 'object' && w.look ? w.look : {};
+  app.workspaces[id] = {
+    ...newWorkspace(str(w.name, 100) || t('Template')),
+    root: rootFolder.id,
+    look: Object.fromEntries(Object.entries(lookIn).filter(([k, v]) => k in LOOK_DEFAULTS && k !== 'bgImage' && typeof v !== 'object')),
+    widgets: arr(w.widgets).filter((x) => WIDGETS[x?.type as string])
+      .map((x) => ({ ...Object.fromEntries(Object.entries(x).filter(([, v]) => typeof v !== 'object')), type: x.type as string, id: crypto.randomUUID() })),
+    notes: arr(w.notes).map((n) => ({
+      id: crypto.randomUUID(), title: str(n?.title, 100) || t('Note'), text: str(n?.text, 20000),
+      checklist: arr(n?.checklist).map((c) => ({ text: str(c, 300), done: false })),
+    })),
+    hiddenCols: arr(w.hiddenCols).filter((k): k is string => typeof k === 'string'),
+  };
+  app.ws = id;
+  save('meta');
+  saveWs();
+  toast(t('Created workspace “{0}”', app.workspaces[id].name));
+}
+
+export const loadTemplate = async (file: string) => applyTemplate(await (await fetch(`/templates/${file}.json`)).json());
+
+export async function importFile(file: File) {
+  try {
+    const input = JSON.parse(await file.text());
+    await (input?.template === 'markboard' ? applyTemplate(input) : applyData(input));
+  } catch {
+    toast(t('Could not read that file'));
+  }
+}
+
+// --- look & navigation ---
+
+export function cycleTheme() {
+  ws().look.theme = THEMES[(THEMES.indexOf(look().theme) + 1) % THEMES.length];
+  saveWs();
+}
+
+/** V: cycle gallery layouts, or toggle compact rows on the board. */
+export function cycleView() {
+  if (ui.view) {
+    const modes = ['compact', 'extended', 'list'];
+    app.galleryMode = modes[(modes.indexOf(app.galleryMode) + 1) % modes.length]!;
+    save('galleryMode');
+  } else {
+    ws().look.compact = !look().compact;
+    saveWs();
+  }
+}
+
+export const switchWs = (id: string) => { app.ws = id; saveWs(); };
+
+export function addWorkspace(name: string) {
+  const id = crypto.randomUUID();
+  app.workspaces[id] = newWorkspace(name, $state.snapshot(ws().look));
+  switchWs(id);
+}
+
+export function deleteWorkspace() {
+  const id = app.ws, old = $state.snapshot(ws());
+  delete app.workspaces[id];
+  app.ws = Object.keys(app.workspaces)[0]!;
+  saveWs();
+  toast(t('Deleted workspace “{0}”', old.name), t('Undo'), () => { app.workspaces[id] = old; switchWs(id); });
+}
+
+/** Bookmark, URL-hash and cross-tab changes. */
+export function startSync() {
+  let pending: ReturnType<typeof setTimeout>;
+  const schedule = () => { clearTimeout(pending); pending = setTimeout(refresh, 50); };
+  for (const ev of ['onCreated', 'onRemoved', 'onChanged', 'onMoved', 'onChildrenReordered'] as const) browser.bookmarks[ev].addListener(schedule);
+  addEventListener('hashchange', () => { ui.view = location.hash.slice(1) || null; });
+  // Background tabs pick up changes made in the visible one; the visible tab is the writer.
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    const st = app as unknown as Record<string, unknown>;
+    for (const [k, { newValue }] of Object.entries(changes))
+      if (k in DEFAULTS && (document.hidden || k === 'backups')) st[k] = newValue ?? structuredClone(DEFAULTS[k as keyof Data]);
+    if (document.hidden && 'workspaces' in changes) normalize();
+  });
+}

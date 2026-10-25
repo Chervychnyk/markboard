@@ -1,0 +1,2 @@
+- Code map and commands: `README.md` (Layout section). `npm run verify` is the pre-commit gate.
+- Board commands are run from the Tabkit palette (`../tabkit`, `lib/providers.ts` there); keep `lib/commands.ts` in step with it.

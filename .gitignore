@@ -1,0 +1,4 @@
+node_modules
+.output
+.wxt
+.claude/settings.local.json

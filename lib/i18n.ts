@@ -1,0 +1,281 @@
+// UI strings are keyed by their English text; each row is [uk, es, fr, de]. Missing → English.
+export const ROWS: Record<string, string[]> = {
+  // common
+  'Cancel': ['Скасувати', 'Cancelar', 'Annuler', 'Abbrechen'],
+  'Save': ['Зберегти', 'Guardar', 'Enregistrer', 'Speichern'],
+  'Close': ['Закрити', 'Cerrar', 'Fermer', 'Schließen'],
+  'Undo': ['Відмінити', 'Deshacer', 'Annuler', 'Rückgängig'],
+  'Done': ['Готово', 'Listo', 'Terminé', 'Fertig'],
+  'Name': ['Назва', 'Nombre', 'Nom', 'Name'],
+  'Title': ['Назва', 'Título', 'Titre', 'Titel'],
+  'URL': ['URL', 'URL', 'URL', 'URL'],
+  'Folder': ['Папка', 'Carpeta', 'Dossier', 'Ordner'],
+  'Color': ['Колір', 'Color', 'Couleur', 'Farbe'],
+  'None': ['Немає', 'Ninguno', 'Aucun', 'Keiner'],
+  'Remove': ['Прибрати', 'Quitar', 'Retirer', 'Entfernen'],
+  'Restore': ['Відновити', 'Restaurar', 'Restaurer', 'Wiederherstellen'],
+  'Automatic': ['Автоматично', 'Automático', 'Automatique', 'Automatisch'],
+  'Settings': ['Налаштування', 'Ajustes', 'Paramètres', 'Einstellungen'],
+  'Search': ['Пошук', 'Buscar', 'Rechercher', 'Suchen'],
+  'New Tab': ['Нова вкладка', 'Nueva pestaña', 'Nouvel onglet', 'Neuer Tab'],
+
+  // toolbar
+  'Workspace': ['Простір', 'Espacio', 'Espace', 'Arbeitsbereich'],
+  'Sort': ['Сортування', 'Ordenar', 'Trier', 'Sortieren'],
+  'Manual': ['Вручну', 'Manual', 'Manuel', 'Manuell'],
+  'Date added': ['Дата додавання', 'Fecha de adición', 'Date d’ajout', 'Hinzugefügt am'],
+  'Gallery layout': ['Вигляд галереї', 'Diseño de galería', 'Disposition de la galerie', 'Galerie-Layout'],
+  'Grid': ['Сітка', 'Cuadrícula', 'Grille', 'Raster'],
+  'Extended': ['Розширений', 'Extendido', 'Étendu', 'Erweitert'],
+  'List': ['Список', 'Lista', 'Liste', 'Liste'],
+  'Bulk rename': ['Масове перейменування', 'Renombrar en lote', 'Renommer en masse', 'Massenumbenennung'],
+  '+ Note': ['+ Нотатка', '+ Nota', '+ Note', '+ Notiz'],
+  'New note (N)': ['Нова нотатка (N)', 'Nueva nota (N)', 'Nouvelle note (N)', 'Neue Notiz (N)'],
+  'Select': ['Вибрати', 'Seleccionar', 'Sélectionner', 'Auswählen'],
+  'Selection mode (S)': ['Режим вибору (S)', 'Modo de selección (S)', 'Mode sélection (S)', 'Auswahlmodus (S)'],
+  'Save tabs': ['Зберегти вкладки', 'Guardar pestañas', 'Enregistrer les onglets', 'Tabs speichern'],
+  'Cycle theme (T)': ['Змінити тему (T)', 'Cambiar tema (T)', 'Changer de thème (T)', 'Design wechseln (T)'],
+  'Keyboard shortcuts (?)': ['Клавіатурні скорочення (?)', 'Atajos de teclado (?)', 'Raccourcis clavier (?)', 'Tastenkürzel (?)'],
+
+  // items & edit dialog
+  'Dismiss reminder': ['Прибрати нагадування', 'Descartar recordatorio', 'Ignorer le rappel', 'Erinnerung verwerfen'],
+  'Favorite': ['Обране', 'Favorito', 'Favori', 'Favorit'],
+  'Color label': ['Кольорова мітка', 'Etiqueta de color', 'Étiquette de couleur', 'Farbmarkierung'],
+  'Edit': ['Редагувати', 'Editar', 'Modifier', 'Bearbeiten'],
+  'Delete': ['Видалити', 'Eliminar', 'Supprimer', 'Löschen'],
+  'Edit bookmark': ['Редагувати закладку', 'Editar marcador', 'Modifier le favori', 'Lesezeichen bearbeiten'],
+  'Edit folder': ['Редагувати папку', 'Editar carpeta', 'Modifier le dossier', 'Ordner bearbeiten'],
+  'Tags (comma separated)': ['Теги (через кому)', 'Etiquetas (separadas por comas)', 'Tags (séparés par des virgules)', 'Tags (durch Kommas getrennt)'],
+  'Comment (shown on hover)': ['Коментар (видно при наведенні)', 'Comentario (se muestra al pasar el cursor)', 'Commentaire (affiché au survol)', 'Kommentar (beim Überfahren sichtbar)'],
+  'Custom icon (emoji or character)': ['Власна іконка (емодзі або символ)', 'Icono personalizado (emoji o carácter)', 'Icône personnalisée (emoji ou caractère)', 'Eigenes Symbol (Emoji oder Zeichen)'],
+  'Remind me at': ['Нагадати о', 'Recordarme el', 'Me le rappeler le', 'Erinnern am'],
+  'Pin to the top bar': ['Закріпити на верхній панелі', 'Fijar en la barra superior', 'Épingler dans la barre du haut', 'In der oberen Leiste anheften'],
+  'Hide from the board': ['Сховати з дошки', 'Ocultar del tablero', 'Masquer du tableau', 'Auf dem Board ausblenden'],
+
+  // trash & duplicates
+  'Trash': ['Кошик', 'Papelera', 'Corbeille', 'Papierkorb'],
+  'Trash · kept for {0} days': ['Кошик · зберігається {0} днів', 'Papelera · se guarda {0} días', 'Corbeille · conservé {0} jours', 'Papierkorb · {0} Tage aufbewahrt'],
+  'Trash is empty.': ['Кошик порожній.', 'La papelera está vacía.', 'La corbeille est vide.', 'Der Papierkorb ist leer.'],
+  'Empty trash': ['Очистити кошик', 'Vaciar papelera', 'Vider la corbeille', 'Papierkorb leeren'],
+  'Trash emptied': ['Кошик очищено', 'Papelera vaciada', 'Corbeille vidée', 'Papierkorb geleert'],
+  'Moved “{0}” to trash': ['«{0}» переміщено в кошик', '«{0}» movido a la papelera', '« {0} » déplacé dans la corbeille', '„{0}“ in den Papierkorb verschoben'],
+  'Moved to trash: {0}': ['Переміщено в кошик: {0}', 'Movidos a la papelera: {0}', 'Déplacés dans la corbeille : {0}', 'In den Papierkorb verschoben: {0}'],
+  'No duplicates found': ['Дублікатів не знайдено', 'No se encontraron duplicados', 'Aucun doublon trouvé', 'Keine Duplikate gefunden'],
+  'Duplicate bookmarks: {0}': ['Дублікати закладок: {0}', 'Marcadores duplicados: {0}', 'Favoris en double : {0}', 'Doppelte Lesezeichen: {0}'],
+  'Keep one of each': ['Залишити по одному', 'Conservar uno de cada', 'Garder un exemplaire de chaque', 'Je eines behalten'],
+
+  // selection
+  'Click items to select them first': ['Спершу клацніть елементи, щоб вибрати їх', 'Primero haz clic en los elementos para seleccionarlos', 'Cliquez d’abord sur des éléments pour les sélectionner', 'Klicke zuerst auf Elemente, um sie auszuwählen'],
+  'Selected: {0}': ['Вибрано: {0}', 'Seleccionados: {0}', 'Sélectionnés : {0}', 'Ausgewählt: {0}'],
+  '★ Favorite': ['★ В обране', '★ Favorito', '★ Favori', '★ Favorit'],
+  '● Color': ['● Колір', '● Color', '● Couleur', '● Farbe'],
+  'Move…': ['Перемістити…', 'Mover…', 'Déplacer…', 'Verschieben…'],
+  'Move to folder': ['Перемістити в папку', 'Mover a carpeta', 'Déplacer vers le dossier', 'In Ordner verschieben'],
+  'Copy links': ['Копіювати посилання', 'Copiar enlaces', 'Copier les liens', 'Links kopieren'],
+  'Links copied': ['Посилання скопійовано', 'Enlaces copiados', 'Liens copiés', 'Links kopiert'],
+
+  // tabs & sessions
+  'Tabs': ['Вкладки', 'Pestañas', 'Onglets', 'Tabs'],
+  'Tabs saved: {0} → “{1}”': ['Збережено вкладок: {0} → «{1}»', 'Pestañas guardadas: {0} → «{1}»', 'Onglets enregistrés : {0} → « {1} »', 'Tabs gespeichert: {0} → „{1}“'],
+  'Save session': ['Зберегти сесію', 'Guardar sesión', 'Enregistrer la session', 'Sitzung speichern'],
+  'Session saved: “{0}” ({1})': ['Сесію збережено: «{0}» ({1})', 'Sesión guardada: «{0}» ({1})', 'Session enregistrée : « {0} » ({1})', 'Sitzung gespeichert: „{0}“ ({1})'],
+  'Delete session': ['Видалити сесію', 'Eliminar sesión', 'Supprimer la session', 'Sitzung löschen'],
+  'Deleted session “{0}”': ['Сесію «{0}» видалено', 'Sesión «{0}» eliminada', 'Session « {0} » supprimée', 'Sitzung „{0}“ gelöscht'],
+  'No links in this folder': ['У цій папці немає посилань', 'No hay enlaces en esta carpeta', 'Aucun lien dans ce dossier', 'Keine Links in diesem Ordner'],
+
+  // notes
+  'Write anything…': ['Пишіть що завгодно…', 'Escribe lo que quieras…', 'Écrivez ce que vous voulez…', 'Schreib, was du willst…'],
+  'Note': ['Нотатка', 'Nota', 'Note', 'Notiz'],
+  'Notes': ['Нотатки', 'Notas', 'Notes', 'Notizen'],
+  '+ Add to checklist': ['+ Додати до списку', '+ Añadir a la lista', '+ Ajouter à la liste', '+ Zur Checkliste hinzufügen'],
+  'Add checklist item': ['Додати пункт списку', 'Añadir elemento a la lista', 'Ajouter un élément à la liste', 'Checklisten-Eintrag hinzufügen'],
+  'Deleted note “{0}”': ['Нотатку «{0}» видалено', 'Nota «{0}» eliminada', 'Note « {0} » supprimée', 'Notiz „{0}“ gelöscht'],
+
+  // widgets & columns
+  'Configure': ['Налаштувати', 'Configurar', 'Configurer', 'Konfigurieren'],
+  'Remove widget': ['Прибрати віджет', 'Quitar widget', 'Retirer le widget', 'Widget entfernen'],
+  'Removed: {0}': ['Прибрано: {0}', 'Quitado: {0}', 'Retiré : {0}', 'Entfernt: {0}'],
+  '+ Add widget': ['+ Додати віджет', '+ Añadir widget', '+ Ajouter un widget', '+ Widget hinzufügen'],
+  'Add widget': ['Додати віджет', 'Añadir widget', 'Ajouter un widget', 'Widget hinzufügen'],
+  'Column': ['Колонка', 'Columna', 'Colonne', 'Spalte'],
+  'No color': ['Без кольору', 'Sin color', 'Sans couleur', 'Keine Farbe'],
+  'Open all links': ['Відкрити всі посилання', 'Abrir todos los enlaces', 'Ouvrir tous les liens', 'Alle Links öffnen'],
+  'Delete note': ['Видалити нотатку', 'Eliminar nota', 'Supprimer la note', 'Notiz löschen'],
+  'Drag to reorder': ['Перетягніть, щоб змінити порядок', 'Arrastra para reordenar', 'Glisser pour réorganiser', 'Zum Umsortieren ziehen'],
+  'Column options': ['Параметри колонки', 'Opciones de columna', 'Options de la colonne', 'Spaltenoptionen'],
+  'Hide column in this workspace': ['Сховати колонку в цьому просторі', 'Ocultar columna en este espacio', 'Masquer la colonne dans cet espace', 'Spalte in diesem Arbeitsbereich ausblenden'],
+  '⏰ Reminders': ['⏰ Нагадування', '⏰ Recordatorios', '⏰ Rappels', '⏰ Erinnerungen'],
+  'Widgets': ['Віджети', 'Widgets', 'Widgets', 'Widgets'],
+  '★ Favorites': ['★ Обране', '★ Favoritos', '★ Favoris', '★ Favoriten'],
+  'Recently added': ['Нещодавно додані', 'Añadidos recientemente', 'Ajoutés récemment', 'Kürzlich hinzugefügt'],
+  'Most visited': ['Найчастіше відвідувані', 'Más visitados', 'Les plus visités', 'Meistbesucht'],
+  'Sessions': ['Сесії', 'Sesiones', 'Sessions', 'Sitzungen'],
+  'Board': ['Дошка', 'Tablero', 'Tableau', 'Board'],
+
+  // bulk rename
+  'Bulk rename in this folder': ['Масове перейменування в цій папці', 'Renombrar en lote en esta carpeta', 'Renommer en masse dans ce dossier', 'Massenumbenennung in diesem Ordner'],
+  'Find': ['Знайти', 'Buscar', 'Rechercher', 'Suchen'],
+  'Replace with': ['Замінити на', 'Reemplazar por', 'Remplacer par', 'Ersetzen durch'],
+  'Regular expression ($1 etc. allowed in replacement)': ['Регулярний вираз ($1 тощо можна в заміні)', 'Expresión regular ($1, etc. permitidos en el reemplazo)', 'Expression régulière ($1, etc. autorisés dans le remplacement)', 'Regulärer Ausdruck ($1 usw. im Ersatz erlaubt)'],
+  'Invalid regular expression': ['Некоректний регулярний вираз', 'Expresión regular no válida', 'Expression régulière invalide', 'Ungültiger regulärer Ausdruck'],
+  'Renamed: {0}': ['Перейменовано: {0}', 'Renombrados: {0}', 'Renommés : {0}', 'Umbenannt: {0}'],
+
+  // workspaces
+  '+ New workspace…': ['+ Новий простір…', '+ Nuevo espacio…', '+ Nouvel espace…', '+ Neuer Arbeitsbereich…'],
+  'Rename workspace…': ['Перейменувати простір…', 'Renombrar espacio…', 'Renommer l’espace…', 'Arbeitsbereich umbenennen…'],
+  'Delete this workspace': ['Видалити цей простір', 'Eliminar este espacio', 'Supprimer cet espace', 'Diesen Arbeitsbereich löschen'],
+  'New workspace': ['Новий простір', 'Nuevo espacio', 'Nouvel espace', 'Neuer Arbeitsbereich'],
+  'Rename workspace': ['Перейменувати простір', 'Renombrar espacio', 'Renommer l’espace', 'Arbeitsbereich umbenennen'],
+  'Deleted workspace “{0}”': ['Простір «{0}» видалено', 'Espacio «{0}» eliminado', 'Espace « {0} » supprimé', 'Arbeitsbereich „{0}“ gelöscht'],
+  'Workspace: {0}': ['Простір: {0}', 'Espacio: {0}', 'Espace : {0}', 'Arbeitsbereich: {0}'],
+  'Created workspace “{0}”': ['Створено простір «{0}»', 'Espacio «{0}» creado', 'Espace « {0} » créé', 'Arbeitsbereich „{0}“ erstellt'],
+
+  // backups & templates
+  'That file is not a Markboard backup': ['Цей файл не є резервною копією Markboard', 'Este archivo no es una copia de seguridad de Markboard', 'Ce fichier n’est pas une sauvegarde Markboard', 'Diese Datei ist keine Markboard-Sicherung'],
+  'Backup restored': ['Резервну копію відновлено', 'Copia de seguridad restaurada', 'Sauvegarde restaurée', 'Sicherung wiederhergestellt'],
+  'That file is not a Markboard template': ['Цей файл не є шаблоном Markboard', 'Este archivo no es una plantilla de Markboard', 'Ce fichier n’est pas un modèle Markboard', 'Diese Datei ist keine Markboard-Vorlage'],
+  'Template': ['Шаблон', 'Plantilla', 'Modèle', 'Vorlage'],
+  'Could not read that file': ['Не вдалося прочитати файл', 'No se pudo leer el archivo', 'Impossible de lire ce fichier', 'Datei konnte nicht gelesen werden'],
+  'Back up now': ['Створити копію зараз', 'Hacer copia ahora', 'Sauvegarder maintenant', 'Jetzt sichern'],
+  'Backup saved': ['Копію збережено', 'Copia guardada', 'Sauvegarde enregistrée', 'Sicherung gespeichert'],
+  'Export': ['Експорт', 'Exportar', 'Exporter', 'Exportieren'],
+  'Export backup': ['Експортувати копію', 'Exportar copia', 'Exporter la sauvegarde', 'Sicherung exportieren'],
+  'Import backup or template': ['Імпорт копії або шаблону', 'Importar copia o plantilla', 'Importer une sauvegarde ou un modèle', 'Sicherung oder Vorlage importieren'],
+  'Add “{0}” template': ['Додати шаблон «{0}»', 'Añadir plantilla «{0}»', 'Ajouter le modèle « {0} »', 'Vorlage „{0}“ hinzufügen'],
+  'Add template: {0}': ['Додати шаблон: {0}', 'Añadir plantilla: {0}', 'Ajouter un modèle : {0}', 'Vorlage hinzufügen: {0}'],
+  'Race weekend': ['Гоночний вікенд', 'Fin de semana de carreras', 'Week-end de course', 'Rennwochenende'],
+
+  // settings
+  'Look of “{0}”': ['Вигляд «{0}»', 'Aspecto de «{0}»', 'Apparence de « {0} »', 'Aussehen von „{0}“'],
+  'Theme': ['Тема', 'Tema', 'Thème', 'Design'],
+  'Light': ['Світла', 'Claro', 'Clair', 'Hell'],
+  'Dark': ['Темна', 'Oscuro', 'Sombre', 'Dunkel'],
+  'Pitch black': ['Чорна', 'Negro puro', 'Noir profond', 'Tiefschwarz'],
+  'Accent color': ['Акцентний колір', 'Color de acento', 'Couleur d’accent', 'Akzentfarbe'],
+  'Typeface': ['Шрифт', 'Tipografía', 'Police', 'Schriftart'],
+  'Sans': ['Без зарубок', 'Sans', 'Sans', 'Serifenlos'],
+  'Serif': ['З зарубками', 'Serif', 'Serif', 'Serif'],
+  'Mono': ['Моноширинний', 'Mono', 'Mono', 'Mono'],
+  'Rounded': ['Заокруглений', 'Redondeada', 'Arrondie', 'Abgerundet'],
+  'Columns per screen': ['Колонок на екран', 'Columnas por pantalla', 'Colonnes par écran', 'Spalten pro Bildschirm'],
+  'Auto (resizable)': ['Авто (змінний розмір)', 'Auto (redimensionable)', 'Auto (redimensionnable)', 'Auto (größenverstellbar)'],
+  'Column opacity': ['Непрозорість колонок', 'Opacidad de columnas', 'Opacité des colonnes', 'Spaltendeckkraft'],
+  'Compact rows': ['Компактні рядки', 'Filas compactas', 'Lignes compactes', 'Kompakte Zeilen'],
+  'Background': ['Фон', 'Fondo', 'Arrière-plan', 'Hintergrund'],
+  'Solid color': ['Суцільний колір', 'Color sólido', 'Couleur unie', 'Einfarbig'],
+  'Gradient': ['Градієнт', 'Degradado', 'Dégradé', 'Verlauf'],
+  'Photo': ['Фото', 'Foto', 'Photo', 'Foto'],
+  'Custom (colors below)': ['Власний (кольори нижче)', 'Personalizado (colores abajo)', 'Personnalisé (couleurs ci-dessous)', 'Eigener (Farben unten)'],
+  'Dusk': ['Сутінки', 'Atardecer', 'Crépuscule', 'Dämmerung'],
+  'Ocean': ['Океан', 'Océano', 'Océan', 'Ozean'],
+  'Forest': ['Ліс', 'Bosque', 'Forêt', 'Wald'],
+  'Ember': ['Жар', 'Brasa', 'Braise', 'Glut'],
+  'Carbon': ['Карбон', 'Carbono', 'Carbone', 'Carbon'],
+  'Second gradient color': ['Другий колір градієнта', 'Segundo color del degradado', 'Deuxième couleur du dégradé', 'Zweite Verlaufsfarbe'],
+  'Background intensity': ['Інтенсивність фону', 'Intensidad del fondo', 'Intensité de l’arrière-plan', 'Hintergrundintensität'],
+  'Film grain': ['Зернистість плівки', 'Grano de película', 'Grain argentique', 'Filmkorn'],
+  'Parallax on mouse move': ['Паралакс під час руху миші', 'Paralaje al mover el ratón', 'Parallaxe au mouvement de la souris', 'Parallaxe bei Mausbewegung'],
+  'Folder shown as columns': ['Папка, показана колонками', 'Carpeta mostrada como columnas', 'Dossier affiché en colonnes', 'Als Spalten angezeigter Ordner'],
+  'General': ['Загальні', 'General', 'Général', 'Allgemein'],
+  'Language': ['Мова', 'Idioma', 'Langue', 'Sprache'],
+  'Show hidden items': ['Показувати приховані елементи', 'Mostrar elementos ocultos', 'Afficher les éléments masqués', 'Ausgeblendete Elemente anzeigen'],
+  'Automatic daily backups (last 7 kept)': ['Щоденні автоматичні копії (зберігаються останні 7)', 'Copias diarias automáticas (se guardan las 7 últimas)', 'Sauvegardes quotidiennes automatiques (7 dernières conservées)', 'Automatische tägliche Sicherungen (die letzten 7 bleiben)'],
+  'Also save backups to Downloads/Markboard backups': ['Також зберігати копії в Завантаження/Markboard backups', 'Guardar también las copias en Descargas/Markboard backups', 'Enregistrer aussi les sauvegardes dans Téléchargements/Markboard backups', 'Sicherungen auch unter Downloads/Markboard backups speichern'],
+  'Show hidden columns': ['Показати приховані колонки', 'Mostrar columnas ocultas', 'Afficher les colonnes masquées', 'Ausgeblendete Spalten anzeigen'],
+  'All columns shown': ['Усі колонки показано', 'Todas las columnas visibles', 'Toutes les colonnes sont affichées', 'Alle Spalten angezeigt'],
+  'Photo too large (max 8 MB)': ['Фото завелике (макс. 8 МБ)', 'Foto demasiado grande (máx. 8 MB)', 'Photo trop volumineuse (8 Mo max.)', 'Foto zu groß (max. 8 MB)'],
+
+  // shortcuts & palette
+  'Search & command palette': ['Пошук і палітра команд', 'Búsqueda y paleta de comandos', 'Recherche et palette de commandes', 'Suche & Befehlspalette'],
+  'Switch view density / gallery layout': ['Змінити щільність / вигляд галереї', 'Cambiar densidad / diseño de galería', 'Changer la densité / disposition de la galerie', 'Dichte / Galerie-Layout wechseln'],
+  'Selection mode': ['Режим вибору', 'Modo de selección', 'Mode sélection', 'Auswahlmodus'],
+  'New note': ['Нова нотатка', 'Nueva nota', 'Nouvelle note', 'Neue Notiz'],
+  'Cycle theme': ['Змінити тему', 'Cambiar tema', 'Changer de thème', 'Design wechseln'],
+  'Back to board': ['Назад до дошки', 'Volver al tablero', 'Retour au tableau', 'Zurück zum Board'],
+  'Find duplicates': ['Знайти дублікати', 'Buscar duplicados', 'Trouver les doublons', 'Duplikate finden'],
+  'Keyboard shortcuts': ['Клавіатурні скорочення', 'Atajos de teclado', 'Raccourcis clavier', 'Tastenkürzel'],
+  'Save open tabs as folder': ['Зберегти відкриті вкладки як папку', 'Guardar pestañas abiertas como carpeta', 'Enregistrer les onglets ouverts dans un dossier', 'Offene Tabs als Ordner speichern'],
+
+  // widgets.js
+  'Date & time': ['Дата й час', 'Fecha y hora', 'Date et heure', 'Datum & Uhrzeit'],
+  'Countdown': ['Зворотний відлік', 'Cuenta atrás', 'Compte à rebours', 'Countdown'],
+  'Pomodoro': ['Помодоро', 'Pomodoro', 'Pomodoro', 'Pomodoro'],
+  'Counter': ['Лічильник', 'Contador', 'Compteur', 'Zähler'],
+  'Snippet': ['Фрагмент', 'Fragmento', 'Extrait', 'Textbaustein'],
+  'Label': ['Підпис', 'Etiqueta', 'Libellé', 'Bezeichnung'],
+  'Time zone': ['Часовий пояс', 'Zona horaria', 'Fuseau horaire', 'Zeitzone'],
+  'Local time': ['Місцевий час', 'Hora local', 'Heure locale', 'Ortszeit'],
+  'Format': ['Формат', 'Formato', 'Format', 'Format'],
+  '24-hour': ['24-годинний', '24 horas', '24 heures', '24 Stunden'],
+  '12-hour': ['12-годинний', '12 horas', '12 heures', '12 Stunden'],
+  'Count down to': ['Відлік до', 'Cuenta atrás hasta', 'Compte à rebours jusqu’à', 'Countdown bis'],
+  'Set a date ⚙': ['Вкажіть дату ⚙', 'Elige una fecha ⚙', 'Choisissez une date ⚙', 'Datum festlegen ⚙'],
+  'Done 🎉': ['Готово 🎉', '¡Listo! 🎉', 'Terminé 🎉', 'Geschafft 🎉'],
+  'Pause': ['Пауза', 'Pausa', 'Pause', 'Pause'],
+  'Start': ['Старт', 'Iniciar', 'Démarrer', 'Start'],
+  'Reset': ['Скинути', 'Reiniciar', 'Réinitialiser', 'Zurücksetzen'],
+  'Focus session done — take a break': ['Сесію фокусу завершено — відпочиньте', 'Sesión de concentración terminada: tómate un descanso', 'Session de concentration terminée — faites une pause', 'Fokuszeit vorbei – mach eine Pause'],
+  'Break over — back to focus': ['Перерва скінчилась — до роботи', 'Fin del descanso: vuelve a concentrarte', 'Pause terminée — retour à la concentration', 'Pause vorbei – zurück zum Fokus'],
+  'Break': ['Перерва', 'Descanso', 'Pause', 'Pause'],
+  'Focus': ['Фокус', 'Concentración', 'Concentration', 'Fokus'],
+  'Goal (optional)': ['Мета (необов’язково)', 'Objetivo (opcional)', 'Objectif (facultatif)', 'Ziel (optional)'],
+  'Reset to zero': ['Скидати до нуля', 'Poner a cero', 'Remettre à zéro', 'Auf null zurücksetzen'],
+  'Never': ['Ніколи', 'Nunca', 'Jamais', 'Nie'],
+  'Every day': ['Щодня', 'Cada día', 'Chaque jour', 'Täglich'],
+  'Every week (Monday)': ['Щотижня (понеділок)', 'Cada semana (lunes)', 'Chaque semaine (lundi)', 'Wöchentlich (Montag)'],
+  'Every month': ['Щомісяця', 'Cada mes', 'Chaque mois', 'Monatlich'],
+  'Decrease': ['Зменшити', 'Disminuir', 'Diminuer', 'Verringern'],
+  'Increase': ['Збільшити', 'Aumentar', 'Augmenter', 'Erhöhen'],
+  'Text': ['Текст', 'Texto', 'Texte', 'Text'],
+  'Add text ⚙': ['Додайте текст ⚙', 'Añade texto ⚙', 'Ajoutez du texte ⚙', 'Text hinzufügen ⚙'],
+  'Copy': ['Копіювати', 'Copiar', 'Copier', 'Kopieren'],
+  'Copied': ['Скопійовано', 'Copiado', 'Copié', 'Kopiert'],
+
+  // popup
+  'Saved ✓': ['Збережено ✓', 'Guardado ✓', 'Enregistré ✓', 'Gespeichert ✓'],
+  'Search bookmarks…': ['Пошук закладок…', 'Buscar marcadores…', 'Rechercher dans les favoris…', 'Lesezeichen durchsuchen…'],
+  'Open board': ['Відкрити дошку', 'Abrir tablero', 'Ouvrir le tableau', 'Board öffnen'],
+
+  // Tabkit, new themes and widgets
+  'Search and commands (F)': ['Пошук і команди (F)', 'Búsqueda y comandos (F)', 'Recherche et commandes (F)', 'Suche und Befehle (F)'],
+  'Install Tabkit to search and run commands': ['Встановіть Tabkit для пошуку й команд', 'Instala Tabkit para buscar y ejecutar comandos', 'Installez Tabkit pour rechercher et lancer des commandes', 'Installiere Tabkit, um zu suchen und Befehle auszuführen'],
+  'F opens the Tabkit palette: board commands start with “Markboard:”. Esc leaves selection mode.': [
+    'F відкриває палітру Tabkit: команди дошки починаються з «Markboard:». Esc виходить із режиму вибору.',
+    'F abre la paleta de Tabkit: los comandos del tablero empiezan por «Markboard:». Esc sale del modo de selección.',
+    'F ouvre la palette Tabkit : les commandes du tableau commencent par « Markboard: ». Échap quitte le mode sélection.',
+    'F öffnet die Tabkit-Palette: Board-Befehle beginnen mit „Markboard:“. Esc beendet den Auswahlmodus.'],
+  'Markboard needs access to your tabs': ['Markboard потрібен доступ до вкладок', 'Markboard necesita acceso a tus pestañas', 'Markboard a besoin d’accéder à vos onglets', 'Markboard braucht Zugriff auf deine Tabs'],
+  'Allow': ['Дозволити', 'Permitir', 'Autoriser', 'Erlauben'],
+  'Restore backup from {0}': ['Відновити копію від {0}', 'Restaurar copia del {0}', 'Restaurer la sauvegarde du {0}', 'Sicherung vom {0} wiederherstellen'],
+  'System': ['Системна', 'Sistema', 'Système', 'System'],
+  'Custom accent': ['Власний акцент', 'Acento personalizado', 'Accent personnalisé', 'Eigene Akzentfarbe'],
+  'Custom (color below)': ['Власний (колір нижче)', 'Personalizado (color abajo)', 'Personnalisé (couleur ci-dessous)', 'Eigene (Farbe unten)'],
+  'Indigo': ['Індиго', 'Índigo', 'Indigo', 'Indigo'],
+  'Blue': ['Синій', 'Azul', 'Bleu', 'Blau'],
+  'Green': ['Зелений', 'Verde', 'Vert', 'Grün'],
+  'Orange': ['Помаранчевий', 'Naranja', 'Orange', 'Orange'],
+  'Red': ['Червоний', 'Rojo', 'Rouge', 'Rot'],
+  'Timer': ['Таймер', 'Cronómetro', 'Chronomètre', 'Stoppuhr'],
+  'Photo frame': ['Фоторамка', 'Marco de fotos', 'Cadre photo', 'Bilderrahmen'],
+  'Pick a photo ⚙': ['Виберіть фото ⚙', 'Elige una foto ⚙', 'Choisissez une photo ⚙', 'Foto auswählen ⚙'],
+};
+
+
+export const LANGS: Record<string, string | null> = { auto: null, en: 'English', uk: 'Українська', es: 'Español', fr: 'Français', de: 'Deutsch' };
+const COLS = ['uk', 'es', 'fr', 'de'];
+
+export let lang = 'en';
+// Dates and numbers follow the UI language, keeping the browser's region when it matches.
+export let locale = 'en';
+let col = -1;
+
+/** Picks the UI language (the stored choice, else the browser's); call once before rendering. */
+export function initLang(stored?: string) {
+  const nav = globalThis.navigator?.language ?? 'en';
+  const browserLang = nav.slice(0, 2);
+  lang = stored && stored in LANGS && stored !== 'auto' ? stored : browserLang in LANGS ? browserLang : 'en';
+  locale = lang === browserLang ? nav : lang;
+  col = COLS.indexOf(lang);
+}
+
+export const t = (s: string, ...args: unknown[]) => (ROWS[s]?.[col] ?? s).replace(/\{(\d)\}/g, (_, i) => String(args[i]));

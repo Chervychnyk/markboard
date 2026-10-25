@@ -1,0 +1,60 @@
+{
+  "template": "markboard",
+  "folders": [
+    {
+      "title": "Timing & data",
+      "links": [
+        { "title": "F1 live timing", "url": "https://www.formula1.com/en/timing/f1-live", "comment": "Sector times and gaps during sessions" },
+        { "title": "F1 TV", "url": "https://f1tv.formula1.com/" },
+        { "title": "Results & standings", "url": "https://www.formula1.com/en/results" },
+        { "title": "FIA", "url": "https://www.fia.com/", "comment": "Stewards' decisions and official documents" }
+      ]
+    },
+    {
+      "title": "Tyres & strategy",
+      "links": [
+        { "title": "Pirelli", "url": "https://www.pirelli.com/", "comment": "Compound choices for the weekend" },
+        { "title": "Windy (track weather)", "url": "https://www.windy.com/" },
+        { "title": "FastF1 docs", "url": "https://docs.fastf1.dev/", "comment": "Python library for pulling lap data" }
+      ]
+    },
+    {
+      "title": "Fantasy league",
+      "links": [
+        { "title": "F1 Fantasy", "url": "https://fantasy.formula1.com/", "comment": "Lock the team before qualifying" },
+        { "title": "r/fantasyF1", "url": "https://www.reddit.com/r/fantasyF1/" }
+      ]
+    },
+    {
+      "title": "News & podcasts",
+      "links": [
+        { "title": "The Race", "url": "https://www.the-race.com/" },
+        { "title": "Autosport F1", "url": "https://www.autosport.com/f1/" },
+        { "title": "RaceFans", "url": "https://www.racefans.net/" },
+        { "title": "r/formula1", "url": "https://www.reddit.com/r/formula1/" }
+      ]
+    }
+  ],
+  "workspace": {
+    "name": "Race weekend",
+    "hiddenCols": ["recent", "top", "root"],
+    "look": {
+      "theme": "black", "font": "mono", "accent": "#e11d48", "compact": true, "panelOpacity": 85,
+      "bgKind": "gradient", "bgPreset": "ember", "intensity": 40, "grain": true, "parallax": true
+    },
+    "widgets": [
+      { "type": "clock", "label": "Melbourne", "tz": "Australia/Melbourne", "hours": "24" },
+      { "type": "clock", "label": "Monza", "tz": "Europe/Rome", "hours": "24" },
+      { "type": "clock", "label": "Las Vegas", "tz": "America/Los_Angeles", "hours": "24" },
+      { "type": "countdown", "label": "Race start" },
+      { "type": "counter", "label": "Fantasy points", "goal": 100, "reset": "week" }
+    ],
+    "notes": [
+      {
+        "title": "Race day plan",
+        "text": "Qualifying recap Saturday night, race with friends on Sunday.",
+        "checklist": ["Set fantasy lineup before qualifying", "Check the tyre allocation", "Charge the headphones", "Snacks ready before the start"]
+      }
+    ]
+  }
+}
