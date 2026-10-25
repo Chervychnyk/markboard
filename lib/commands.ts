@@ -40,9 +40,9 @@ export function providedCommands(d: Pick<Data, 'workspaces' | 'ws'>, t: (s: stri
   const title = (c: (typeof COMMANDS)[number]) =>
     c.id.startsWith('template:') ? t(c.title, t(TEMPLATES[c.id.slice(9)]!)) : t(c.title);
   return [
-    ...COMMANDS.filter((c) => c.id !== 'search').map((c) => ({ id: c.id, title: `Markboard: ${title(c)}` })),
+    ...COMMANDS.filter((c) => c.id !== 'search').map((c) => ({ id: c.id, title: title(c) })),
     ...Object.entries(d.workspaces)
       .filter(([id]) => id !== d.ws)
-      .map(([id, w]) => ({ id: `ws:${id}`, title: `Markboard: ${t('Workspace: {0}', w.name)}` })),
+      .map(([id, w]) => ({ id: `ws:${id}`, title: t('Workspace: {0}', w.name) })),
   ];
 }

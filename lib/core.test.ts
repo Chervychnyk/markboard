@@ -62,9 +62,9 @@ test('providedCommands: no search command, one per other workspace', () => {
   const ws = { a: normalizeWorkspace({ name: 'Home' }, ''), b: normalizeWorkspace({ name: 'Work' }, '') };
   const cmds = providedCommands({ workspaces: ws, ws: 'a' }, (s, ...a) => s.replace('{0}', String(a[0])));
   assert.ok(!cmds.some((c) => c.id === 'search'));
-  assert.ok(cmds.some((c) => c.id === 'ws:b' && c.title === 'Markboard: Workspace: Work'));
+  assert.ok(cmds.some((c) => c.id === 'ws:b' && c.title === 'Workspace: Work'));
   assert.ok(!cmds.some((c) => c.id === 'ws:a'));
-  assert.ok(cmds.some((c) => c.title === 'Markboard: Add template: Race weekend'));
+  assert.ok(cmds.some((c) => c.title === 'Add template: Race weekend'));
 });
 
 test('bundled template is valid', () => {
