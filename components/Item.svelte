@@ -31,7 +31,6 @@
     class:menu-open={menuOpen}
     class:fav={m.fav}
     class:folder={!n.url}
-    class:previewless={!n.url && !preview.length}
     data-id={n.id}
     draggable={n.id ? 'true' : undefined}
     class:drop-before={ui.dropHint?.id === n.id && ui.dropHint?.after === false}
@@ -54,12 +53,15 @@
           {/each}
           {#if childCount > preview.length}<span class="mini more">+{childCount - preview.length}</span>{/if}
         </span>
+      {:else if !n.url}
+        <span class="folder-preview empty">{t('Empty folder')}</span>
       {/if}
       <Icon {n} {m} />
       <span class="body">
         <span class="title-line">
           {#if !n.url}<span class="folder-inline-ico" aria-hidden="true"><Glyph name="folder" size={14} /></span>{/if}
           <span class="title">{n.title || n.url}</span>
+          {#if !n.url && childCount}<span class="folder-n">{childCount}</span>{/if}
           {#if m.remind}
             <span class="due" class:upcoming={!isDue(m)} title={m.remind}>
               <Glyph name="bell" size={12} />
@@ -71,7 +73,7 @@
         </span>
         {#if m.tags?.length}<span class="tags">{#each m.tags as tag (tag)}<span class="tag">#{tag}</span>{/each}</span>{/if}
         {#if m.comment}<span class="comment">{m.comment}</span>{/if}
-        {#if n.url}<span class="url">{host}</span>{:else}<span class="folder-count">{childCount}</span>{/if}
+        {#if n.url}<span class="url">{host}</span>{/if}
       </span>
     </a>
     {#if n.id && !ui.selecting}

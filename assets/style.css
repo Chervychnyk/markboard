@@ -518,7 +518,7 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .comment, .url { display: none; font-size: 12.5px; line-height: 1.35; color: var(--faint); overflow: hidden; text-overflow: ellipsis; }
 .item.selected .item-link { cursor: pointer; }
 .item input[type="checkbox"] { flex: none; width: 14px; height: 14px; margin: 0; accent-color: var(--text); }
-.folder-preview, .folder-count { display: none; }
+.folder-preview, .folder-n { display: none; }
 
 .acts {
   position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
@@ -887,10 +887,7 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-size: 13px; color: var(--muted);
 }
-.gallery .folder-count {
-  display: block; margin-top: auto;
-  font-size: 13px; line-height: 1.35; color: var(--muted);
-}
+.gallery .folder-n { display: inline; flex: none; font-size: 12.5px; font-weight: 500; color: var(--faint); font-variant-numeric: tabular-nums; }
 .gallery .item::before { top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; }
 .gallery .acts { top: auto; bottom: 10px; right: 8px; transform: none; }
 .gallery .item.fav .acts .star { position: static; }
@@ -905,10 +902,14 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
   border: 1px solid var(--rule); border-radius: 6px; background: var(--raised);
   color: var(--muted);
 }
+.gallery .folder-preview.empty {
+  display: flex; align-items: center; justify-content: center; min-height: 40px;
+  border: 1px dashed var(--border); border-radius: 6px;
+  font-size: 12px; color: var(--faint);
+}
 .folder-preview .mini.more { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .folder-preview .ico { width: 16px; height: 16px; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .gallery:not(.mode-list) .item.folder > .item-link > .ico { display: none; }
-.gallery:not(.mode-list) .item.previewless > .item-link > .ico { display: inline-flex; }
 .gallery:not(.mode-list) .item.folder .folder-inline-ico { display: inline-flex; }
 
 /* Extended mode shows comments and tags inside balanced grid tiles. */
@@ -940,7 +941,7 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
 .mode-list .body { flex-direction: column; justify-content: center; gap: 2px; }
 .mode-list .title { white-space: nowrap; -webkit-line-clamp: unset; display: block; font-size: 14px; font-weight: 500; }
 .mode-list .url { margin-top: 0; font-size: 12.5px; color: var(--muted); }
-.mode-list .tags, .mode-list .comment, .mode-list .folder-preview, .mode-list .folder-count { display: none; }
+.mode-list .tags, .mode-list .comment, .mode-list .folder-preview { display: none; }
 .mode-list .acts { top: 50%; bottom: auto; transform: translateY(-50%); }
 
 /* Notes & widgets sidebar. */

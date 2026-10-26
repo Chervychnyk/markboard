@@ -75,7 +75,7 @@
     </nav>
     <div class="gallery-title-row">
       <h1 class="gallery-title">{folder.title}</h1>
-      <span class="gallery-sub">{t('{0} bookmarks', kids.length)}</span>
+      <span class="gallery-sub">{kids.length}</span>
     </div>
     {#if tags.length}
       <div class="tag-filter" role="group" aria-label={t('Tags')}>
