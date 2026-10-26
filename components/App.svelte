@@ -5,11 +5,11 @@
   import { clamp } from '@/lib/core';
   import { form, modal, toast } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { settings } from '@/lib/settings';
+  import { newWorkspaceDialog, settings } from '@/lib/settings';
   import {
     clearFilters, closeItemMenu, createBookmark, createFolder, cycleTheme, cycleView,
     data, DATA_IMG, dedupe, deleteFromMenu, hideFromMenu, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, hasActiveFilter, HEX,
-    loadTemplate, look, newNote, newWorkspaceDialog, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
+    loadTemplate, look, newNote, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode } from '@/lib/types';
   import { WIDGETS } from '@/lib/widgets';
@@ -213,13 +213,13 @@
     <div class="menu-select tool-icon" title={t('New bookmark')}>
       <Glyph name="plus" size={15} />
       <select aria-label={t('New bookmark')} onchange={onQuickAdd}>
-        <option value="">+ {t('New bookmark')}</option>
+        <option value="" hidden>{t('New bookmark')}</option>
         <option value="bookmark">{t('New bookmark')}</option>
         <option value="folder">{t('New folder')}</option>
         <option value="note">{t('New note')}</option>
-        {#each Object.entries(WIDGETS) as [k, d] (k)}
-          <option value={'widget:' + k}>{t('+ Add widget')}: {t(d.label)}</option>
-        {/each}
+        <optgroup label={t('Add widget')}>
+          {#each Object.entries(WIDGETS) as [k, d] (k)}<option value={'widget:' + k}>{t(d.label)}</option>{/each}
+        </optgroup>
       </select>
     </div>
     {/if}
@@ -338,7 +338,7 @@
     <div class="menu-select dock-tool" title={t('More')}>
       <Glyph name="more" size={15} />
       <select aria-label={t('More')} onchange={onMore}>
-        <option value="">{t('More')}</option>
+        <option value="" hidden>{t('More')}</option>
         <option value="select">{t('Select')}</option>
         <option value="note">{t('New note')}</option>
         <option value="save-session">{t('Save session')}</option>

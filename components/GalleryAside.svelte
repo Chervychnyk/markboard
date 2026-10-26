@@ -101,7 +101,7 @@
       </div>
     {/each}
     <select class="add-widget" aria-label={t('Add widget')} onchange={addWidget}>
-      <option value="">{t('+ Add widget')}</option>
+      <option value="" hidden>{t('+ Add widget')}</option>
       {#each Object.entries(WIDGETS) as [type, def] (type)}
         <option value={type}>{t(def.label)}</option>
       {/each}

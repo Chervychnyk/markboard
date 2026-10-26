@@ -277,7 +277,7 @@
             <Glyph name="folder" size={14} />
             <span>{t('Move to…')}</span>
             <select aria-label={t('Move to folder')} onchange={onMoveFolder}>
-              <option value="">{t('Move to…')}</option>
+              <option value="" hidden>{t('Move to…')}</option>
               {#each folderOptions().filter(([id]) => id !== n.id) as [id, label] (id)}
                 <option value={id}>{label}</option>
               {/each}
