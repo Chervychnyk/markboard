@@ -480,12 +480,13 @@ type Template = {
 };
 
 /** Templates create real bookmark folders (under Other bookmarks) plus a workspace showing them. */
-export async function applyTemplate(tpl: Template) {
+export async function applyTemplate(tpl: Template, name?: string) {
   const w = tpl?.workspace;
   if (tpl?.template !== 'markboard' || typeof w !== 'object' || !Array.isArray(tpl.folders)) return toast(t('That file is not a Markboard template'));
   const str = (v: unknown, max = 2000) => String(v ?? '').slice(0, max);
   const arr = <T,>(v: T[] | undefined) => (Array.isArray(v) ? v : []);
-  const rootFolder = await browser.bookmarks.create({ parentId: data.tree.children![1]!.id, title: str(w.name, 100) || t('Template') });
+  const title = str(name || w.name, 100) || t('Template');
+  const rootFolder = await browser.bookmarks.create({ parentId: data.tree.children![1]!.id, title });
   for (const f of tpl.folders) {
     const folder = await browser.bookmarks.create({ parentId: rootFolder.id, title: str(f?.title, 100) });
     for (const l of arr(f?.links)) {
@@ -497,7 +498,7 @@ export async function applyTemplate(tpl: Template) {
   const id = crypto.randomUUID();
   const lookIn = typeof w.look === 'object' && w.look ? w.look : {};
   app.workspaces[id] = {
-    ...newWorkspace(str(w.name, 100) || t('Template')),
+    ...newWorkspace(title),
     root: rootFolder.id,
     look: Object.fromEntries(Object.entries(lookIn).filter(([k, v]) => k in LOOK_DEFAULTS && k !== 'bgImage' && typeof v !== 'object')),
     widgets: arr(w.widgets).filter((x) => WIDGETS[x?.type as string])
@@ -514,7 +515,7 @@ export async function applyTemplate(tpl: Template) {
   toast(t('Created workspace “{0}”', app.workspaces[id].name));
 }
 
-export const loadTemplate = async (file: string) => applyTemplate(await (await fetch(`/templates/${file}.json`)).json());
+export const loadTemplate = async (file: string, name?: string) => applyTemplate(await (await fetch(`/templates/${file}.json`)).json(), name);
 
 export async function importFile(file: File) {
   try {
@@ -554,13 +555,7 @@ export function addWorkspace(name: string, empty = false) {
   switchWs(id);
 }
 
-export async function newWorkspaceDialog() {
-  const r = await form(t('New workspace'), [
-    { name: 'name', label: t('Name'), value: '', required: true },
-    { name: 'empty', label: t('Start with an empty board'), type: 'checkbox', value: false },
-  ]);
-  if (r?.name) addWorkspace(r.name, r.empty);
-}
+
 
 export function deleteWorkspace() {
   const id = app.ws, old = $state.snapshot(ws());

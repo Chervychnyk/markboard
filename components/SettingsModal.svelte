@@ -3,10 +3,10 @@
   import { TEMPLATES } from '@/lib/commands';
   import { form, toast } from '@/lib/dialogs.svelte';
   import { LANGS, locale, t } from '@/lib/i18n';
-  import { ACCENT_NAMES, pickBackupFile } from '@/lib/settings';
+  import { ACCENT_NAMES, newWorkspaceDialog, pickBackupFile } from '@/lib/settings';
   import {
     ACCENTS, applyData, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData,
-    folderOptions, FONT_NAMES, FONTS, loadTemplate, look, newWorkspaceDialog, PRESET_NAMES, PRESETS, save, saveWs, app, switchWs, TRASH_DAYS, ws, wsRoot,
+    folderOptions, FONT_NAMES, FONTS, loadTemplate, look, PRESET_NAMES, PRESETS, save, saveWs, app, switchWs, TRASH_DAYS, ws, wsRoot,
   } from '@/lib/store.svelte';
   import Duplicates from './Duplicates.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
