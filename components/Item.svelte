@@ -37,7 +37,7 @@
     oncontextmenu={n.id && !ui.selecting ? (e) => { e.preventDefault(); openItemMenu(id, e.currentTarget); } : undefined}
     role="listitem"
   >
-    <a class="item-link" href={n.url ?? '#' + n.id} title={[n.url ?? n.title, m.comment].filter(Boolean).join('\n')} onclick={sel ? act(() => toggleSel(id)) : undefined}>
+    <a class="item-link" href={n.url ?? '#' + n.id} title={[n.url ?? n.title, m.comment].filter(Boolean).join('\n')} onclick={sel ? act((e) => toggleSel(id, e.shiftKey)) : undefined}>
       {#if sel}<input type="checkbox" checked={on} readonly tabindex={-1} aria-hidden="true" />{/if}
       {#if preview.length}
         <span class="folder-preview" aria-hidden="true">

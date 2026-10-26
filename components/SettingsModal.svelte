@@ -16,7 +16,7 @@
 
   let { close }: { close: () => void } = $props();
 
-  type TabId = 'appearance' | 'board' | 'workspaces' | 'general' | 'trash' | 'backups' | 'shortcuts';
+  type TabId = 'appearance' | 'board' | 'workspaces' | 'toolbar' | 'general' | 'trash' | 'backups' | 'shortcuts';
   let tab = $state<TabId>('appearance');
   let q = $state('');
 
@@ -24,15 +24,32 @@
   const w = $derived(ws());
   const dupGroups = $derived(duplicateGroups());
 
-  const navItems: { id: TabId; label: string; icon: GlyphName; group?: string; count?: number }[] = $derived([
-    { id: 'appearance', label: t('Appearance'), icon: 'swatch' },
-    { id: 'board', label: t('Board & gallery'), icon: 'grid' },
-    { id: 'workspaces', label: t('Workspaces'), icon: 'layers', count: Object.keys(app.workspaces).length },
-    { id: 'general', label: t('General'), icon: 'sliders' },
-    { id: 'trash', label: t('Trash'), icon: 'trash', group: t('Data'), count: app.trash.length || undefined },
-    { id: 'backups', label: t('Backup & restore'), icon: 'archive' },
-    { id: 'shortcuts', label: t('Keyboard shortcuts'), icon: 'keyboard' },
+  const navItems: { id: TabId; label: string; sub: string; icon: GlyphName; group?: string; count?: number }[] = $derived([
+    { id: 'appearance', label: t('Appearance'), sub: t('Look of “{0}”', w.name), icon: 'swatch' },
+    { id: 'board', label: t('Board & gallery'), sub: t('Columns, rows and what the board shows'), icon: 'grid' },
+    { id: 'workspaces', label: t('Workspaces'), sub: t('Separate boards over the same bookmarks'), icon: 'layers', count: Object.keys(app.workspaces).length },
+    { id: 'toolbar', label: t('Toolbar & header'), sub: t('Choose what the top bar and dock show'), icon: 'panel' },
+    { id: 'general', label: t('General'), sub: t('Language and duplicate bookmarks'), icon: 'sliders' },
+    { id: 'trash', label: t('Trash'), sub: t('Deleted items you can still bring back'), icon: 'trash', group: t('Data'), count: app.trash.length || undefined },
+    { id: 'backups', label: t('Backup & restore'), sub: t('Snapshots, export and import'), icon: 'archive' },
+    { id: 'shortcuts', label: t('Keyboard shortcuts'), sub: t('Every key the board responds to'), icon: 'keyboard' },
   ]);
+  const current = $derived(navItems.find((x) => x.id === tab)!);
+
+  // Ids match the shown() checks in App.svelte.
+  const tools: { group: string; items: [id: string, label: string][] }[] = $derived([
+    { group: t('Top bar'), items: [
+      ['meta', t('Link and folder count')], ['fav', t('Favorites')], ['hidden', t('Show hidden items')],
+      ['color', t('Color label')], ['tags', t('Tags')], ['add', t('New bookmark')],
+      ['sort', t('Sort')], ['density', t('View density')], ['gallery', t('Open gallery')],
+    ] },
+    { group: t('Dock'), items: [['pins', t('Pinned links')]] },
+  ]);
+
+  function setTool(id: string, on: boolean) {
+    app.hiddenTools = on ? app.hiddenTools.filter((x) => x !== id) : [...app.hiddenTools, id];
+    save('hiddenTools');
+  }
 
   const filteredNav = $derived(
     q.trim()
@@ -126,8 +143,8 @@
   <div class="st-main">
     <header class="st-head">
       <div>
-        <h3>{navItems.find((x) => x.id === tab)?.label ?? t('Settings')}</h3>
-        <p class="st-sub">{t('Look of “{0}”', w.name)}</p>
+        <h3>{current.label}</h3>
+        <p class="st-sub">{current.sub}</p>
       </div>
       <button type="button" class="dialog-x" title={t('Close')} aria-label={t('Close')} onclick={close}>
         <Glyph name="x" size={16} />
@@ -237,6 +254,7 @@
             <div class="st-control-row">
               <div class="st-control-label">
                 <span>{t('Column opacity')}</span>
+                <span class="st-row-desc">{t('See more of the background through columns')}</span>
               </div>
               <input type="range" min={30} max={100} value={l.panelOpacity} oninput={(e) => setLook('panelOpacity', Number(e.currentTarget.value))} aria-label={t('Column opacity')} />
               <span class="st-val">{l.panelOpacity}%</span>
@@ -245,6 +263,7 @@
             <label class="st-switch-row">
               <div>
                 <div class="st-row-title">{t('Parallax on mouse move')}</div>
+                <div class="st-row-desc">{t('The background shifts slightly as the mouse moves')}</div>
               </div>
               <input type="checkbox" class="st-switch" checked={l.parallax} onchange={(e) => setLook('parallax', e.currentTarget.checked)} />
             </label>
@@ -252,6 +271,7 @@
             <label class="st-switch-row">
               <div>
                 <div class="st-row-title">{t('Film grain')}</div>
+                <div class="st-row-desc">{t('A fine noise that smooths out gradients')}</div>
               </div>
               <input type="checkbox" class="st-switch" checked={l.grain} onchange={(e) => setLook('grain', e.currentTarget.checked)} />
             </label>
@@ -286,12 +306,12 @@
             </div>
 
             <label class="st-switch-row">
-              <div class="st-row-title">{t('Compact rows')}</div>
+              <div><div class="st-row-title">{t('Compact rows')}</div><div class="st-row-desc">{t('Tighter rows fit more links on screen')}</div></div>
               <input type="checkbox" class="st-switch" checked={l.compact} onchange={(e) => setLook('compact', e.currentTarget.checked)} />
             </label>
 
             <label class="st-switch-row">
-              <div class="st-row-title">{t('Folder shown as columns')}</div>
+              <div><div class="st-row-title">{t('Folder shown as columns')}</div><div class="st-row-desc">{t('Its subfolders become the board columns')}</div></div>
               <select class="st-select" value={wsRoot().id} onchange={(e) => { w.root = e.currentTarget.value; saveWs(); }}>
                 {#each folderOptions() as [id, label] (id)}
                   <option value={id}>{label}</option>
@@ -300,7 +320,7 @@
             </label>
 
             <label class="st-switch-row">
-              <div class="st-row-title">{t('Show hidden items')}</div>
+              <div><div class="st-row-title">{t('Show hidden items')}</div><div class="st-row-desc">{t('Hidden bookmarks appear dimmed')}</div></div>
               <input type="checkbox" class="st-switch" checked={app.showHidden} onchange={(e) => { app.showHidden = e.currentTarget.checked; save('showHidden'); }} />
             </label>
 
@@ -342,11 +362,26 @@
           </div>
         </section>
 
+      {:else if tab === 'toolbar'}
+        {#each tools as sec (sec.group)}
+          <section class="st-sec">
+            <div class="st-sec-title">{sec.group}</div>
+            <div class="st-bg-panel">
+              {#each sec.items as [id, label] (id)}
+                <label class="st-switch-row">
+                  <div class="st-row-title">{label}</div>
+                  <input type="checkbox" class="st-switch" checked={!app.hiddenTools.includes(id)} onchange={(e) => setTool(id, e.currentTarget.checked)} />
+                </label>
+              {/each}
+            </div>
+          </section>
+        {/each}
+
       {:else if tab === 'general'}
         <section class="st-sec">
           <div class="st-bg-panel">
             <label class="st-switch-row">
-              <div class="st-row-title">{t('Language')}</div>
+              <div><div class="st-row-title">{t('Language')}</div><div class="st-row-desc">{t('Set independently of the browser language')}</div></div>
               <select class="st-select" value={app.lang ?? 'auto'} onchange={onLangChange}>
                 {#each Object.entries(LANGS) as [code, name] (code)}
                   <option value={code}>{name ?? t('Automatic')}</option>
@@ -385,11 +420,11 @@
         <section class="st-sec">
           <div class="st-bg-panel">
             <label class="st-switch-row">
-              <div class="st-row-title">{t('Automatic daily backups (last 7 kept)')}</div>
+              <div><div class="st-row-title">{t('Automatic daily backups (last 7 kept)')}</div><div class="st-row-desc">{t('Saved on this device once a day')}</div></div>
               <input type="checkbox" class="st-switch" checked={app.autoBackup} onchange={(e) => { app.autoBackup = e.currentTarget.checked; save('autoBackup'); }} />
             </label>
             <label class="st-switch-row">
-              <div class="st-row-title">{t('Also save backups to Downloads/Markboard backups')}</div>
+              <div><div class="st-row-title">{t('Also save backups to Downloads/Markboard backups')}</div><div class="st-row-desc">{t('Keeps a copy outside the browser')}</div></div>
               <input
                 type="checkbox"
                 class="st-switch"

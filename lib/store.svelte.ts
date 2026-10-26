@@ -290,12 +290,23 @@ export async function dedupe(groups: BNode[][]) {
 
 // --- selection ---
 
+let anchor = '';
+
 export function toggleSelect() {
   ui.selecting = !ui.selecting;
   ui.selected.clear();
+  anchor = '';
 }
 
-export const toggleSel = (id: string) => (ui.selected.has(id) ? ui.selected.delete(id) : ui.selected.add(id));
+/** Click toggles one item; Shift-click selects everything between the last click and this one, in page order. */
+export function toggleSel(id: string, range = false) {
+  const ids = range && anchor ? [...document.querySelectorAll<HTMLElement>('.item[data-id]')].map((el) => el.dataset.id!) : [];
+  const [a, b] = [ids.indexOf(anchor), ids.indexOf(id)];
+  if (a >= 0 && b >= 0) for (const x of ids.slice(Math.min(a, b), Math.max(a, b) + 1)) ui.selected.add(x);
+  else if (ui.selected.has(id)) ui.selected.delete(id);
+  else ui.selected.add(id);
+  anchor = id;
+}
 
 export function bulkMeta(nodes: BNode[], patch: Meta) {
   for (const n of nodes) app.meta[n.id] = { ...app.meta[n.id], ...patch };

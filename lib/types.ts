@@ -70,4 +70,6 @@ export interface Data {
   backupToDownloads: boolean;
   backups: Backup[];
   lang: string;
+  /** toolbar and dock items the user turned off in Settings → Toolbar & header */
+  hiddenTools: string[];
 }

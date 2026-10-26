@@ -26,6 +26,7 @@
   import Trash from './Trash.svelte';
 
   const l = $derived(look());
+  const shown = (tool: string) => !app.hiddenTools.includes(tool);
   const gallery = $derived(!!ui.view && data.byId.has(ui.view)); // a deleted folder falls back to the board
   const tags = $derived(allTags());
   const firstFolderId = $derived((wsRoot().children ?? []).find((n) => !n.url)?.id ?? wsRoot().id);
@@ -179,7 +180,7 @@
   <span class="top-sep" aria-hidden="true"></span>
   <div class="scope">
     {#if gallery}<span class="scope-name">{ws().name}</span>{:else}<h1 class="scope-name">{ws().name}</h1>{/if}
-    <span class="scope-meta">{t('{0} links · {1} folders', counts.links, counts.folders)}</span>
+    {#if shown('meta')}<span class="scope-meta">{t('{0} links · {1} folders', counts.links, counts.folders)}</span>{/if}
     <span class="scope-chev"><Glyph name="chevron" size={12} /></span>
     <select id="ws" aria-label={t('Workspace')} value={app.ws} onchange={onWorkspace}>
       {#each Object.entries(app.workspaces) as [id, w] (id)}<option value={id}>{w.name}</option>{/each}
@@ -190,6 +191,7 @@
   </div>
 
   <div class="top-filters" role="toolbar" aria-label={t('Board')}>
+    {#if shown('fav')}
     <button
       type="button"
       class="tool-icon"
@@ -201,6 +203,8 @@
     >
       <Glyph name={ui.filterFav ? 'star-fill' : 'star'} size={15} />
     </button>
+    {/if}
+    {#if shown('hidden')}
     <button
       type="button"
       class="tool-icon"
@@ -212,6 +216,8 @@
     >
       <Glyph name={app.showHidden ? 'eye' : 'eye-off'} size={15} />
     </button>
+    {/if}
+    {#if shown('color')}
     <div class="menu-select tool-icon" class:on={!!ui.filterColor} title={t('Color label')}>
       {#if ui.filterColor}
         <span class="color-dot dot-{ui.filterColor}"></span>
@@ -225,7 +231,8 @@
         {/each}
       </select>
     </div>
-    {#if tags.length}
+    {/if}
+    {#if tags.length && shown('tags')}
       <div class="menu-select tool-icon" class:on={!!ui.filterTag} title={t('Tags')}>
         <Glyph name="tag" size={15} />
         <select aria-label={t('Tags')} bind:value={ui.filterTag}>
@@ -236,6 +243,7 @@
         </select>
       </div>
     {/if}
+    {#if shown('add')}
     <div class="menu-select tool-icon" title={t('New bookmark')}>
       <Glyph name="plus" size={15} />
       <select aria-label={t('New bookmark')} onchange={onQuickAdd}>
@@ -248,6 +256,7 @@
         {/each}
       </select>
     </div>
+    {/if}
   </div>
 
   <button class="search" onclick={openTabkit} aria-label={t('Search and commands (F)')} title={t('Search and commands (F)')}>
@@ -257,6 +266,7 @@
   </button>
 
   <div class="top-actions">
+    {#if shown('sort')}
     <div class="sort-pill" title={t('Sort')}>
       <Glyph name="sort" size={13} />
       <select aria-label={t('Sort')} bind:value={ui.sort}>
@@ -265,6 +275,8 @@
         <option value="date">{t('Date added')}</option>
       </select>
     </div>
+    {/if}
+    {#if shown('density')}
     <button
       type="button"
       class="tool-icon"
@@ -275,6 +287,8 @@
     >
       <Glyph name="list" size={15} />
     </button>
+    {/if}
+    {#if shown('gallery')}
     <button
       type="button"
       class="tool-icon"
@@ -285,6 +299,7 @@
     >
       <Glyph name="grid" size={15} />
     </button>
+    {/if}
     <button
       type="button"
       class="tool-icon"
@@ -321,7 +336,7 @@
     </button>
   </div>
 
-  <Pins />
+  {#if shown('pins')}<Pins />{/if}
 
   <div class="dock-tools">
     <button type="button" class="dock-tool" title={t('New note (N)')} aria-label={t('New note')} onclick={newNote}>
