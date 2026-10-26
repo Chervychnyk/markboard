@@ -2,7 +2,7 @@
   import { clamp } from '@/lib/core';
   import { t } from '@/lib/i18n';
   import {
-    data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, look, matchesFilter, sortRows, app, toggleCollapsed, ws, wsRoot,
+    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, look, matchesFilter, sortRows, app, toggleCollapsed, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode, Note, Row, Widget } from '@/lib/types';
   import Column from './Column.svelte';
@@ -118,6 +118,13 @@
 
 <svelte:window bind:innerWidth={vw} />
 
+{#if hasActiveFilter() && !cols.length}
+  <div class="board-empty">
+    <p class="board-empty-title">{t('Nothing matches these filters')}</p>
+    <button type="button" class="btn sm" onclick={clearFilters}>{t('Clear filters')}</button>
+  </div>
+{:else}
+
 {#each lanes as lane, li (li)}
   <div class="board-lane">
     {#each lane as c (c.k)}
@@ -181,3 +188,4 @@
     {/each}
   </div>
 {/each}
+{/if}

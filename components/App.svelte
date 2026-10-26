@@ -7,7 +7,7 @@
   import { t } from '@/lib/i18n';
   import { settings } from '@/lib/settings';
   import {
-    addWorkspace, allTags, clearFilters, closeItemMenu, COLORS, createBookmark, createFolder, cycleTheme, cycleView,
+    addWorkspace, clearFilters, closeItemMenu, createBookmark, createFolder, cycleTheme, cycleView,
     data, DATA_IMG, dedupe, deleteFromMenu, hideFromMenu, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, hasActiveFilter, HEX,
     loadTemplate, look, newNote, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
@@ -21,6 +21,7 @@
   import Help from './Help.svelte';
   import ItemMenu from './ItemMenu.svelte';
   import Mark from './Mark.svelte';
+  import FilterMenu from './FilterMenu.svelte';
   import Pins from './Pins.svelte';
   import Selbar from './Selbar.svelte';
   import Trash from './Trash.svelte';
@@ -28,7 +29,6 @@
   const l = $derived(look());
   const shown = (tool: string) => !app.hiddenTools.includes(tool);
   const gallery = $derived(!!ui.view && data.byId.has(ui.view)); // a deleted folder falls back to the board
-  const tags = $derived(allTags());
   const firstFolderId = $derived((wsRoot().children ?? []).find((n) => !n.url)?.id ?? wsRoot().id);
 
   // --- look ---
@@ -193,19 +193,7 @@
   </div>
 
   <div class="top-filters" role="toolbar" aria-label={t('Board')}>
-    {#if shown('fav')}
-    <button
-      type="button"
-      class="tool-icon"
-      class:on={ui.filterFav}
-      aria-pressed={ui.filterFav}
-      title={t('Favorites')}
-      aria-label={t('Favorites')}
-      onclick={() => (ui.filterFav = !ui.filterFav)}
-    >
-      <Glyph name={ui.filterFav ? 'star-fill' : 'star'} size={15} />
-    </button>
-    {/if}
+    {#if shown('filter')}<FilterMenu />{/if}
     {#if shown('hidden')}
     <button
       type="button"
@@ -218,32 +206,6 @@
     >
       <Glyph name={app.showHidden ? 'eye' : 'eye-off'} size={15} />
     </button>
-    {/if}
-    {#if shown('color')}
-    <div class="menu-select tool-icon" class:on={!!ui.filterColor} title={t('Color label')}>
-      {#if ui.filterColor}
-        <span class="color-dot dot-{ui.filterColor}"></span>
-      {:else}
-        <Glyph name="swatch" size={15} />
-      {/if}
-      <select aria-label={t('Color label')} bind:value={ui.filterColor}>
-        <option value="">{t('Color label')}: {t('None')}</option>
-        {#each COLORS.filter(Boolean) as c (c)}
-          <option value={c}>{c}</option>
-        {/each}
-      </select>
-    </div>
-    {/if}
-    {#if tags.length && shown('tags')}
-      <div class="menu-select tool-icon" class:on={!!ui.filterTag} title={t('Tags')}>
-        <Glyph name="tag" size={15} />
-        <select aria-label={t('Tags')} bind:value={ui.filterTag}>
-          <option value="">{t('Tags')}: {t('None')}</option>
-          {#each tags as x (x)}
-            <option value={x}>#{x}</option>
-          {/each}
-        </select>
-      </div>
     {/if}
     {#if shown('add')}
     <div class="menu-select tool-icon" title={t('New bookmark')}>
@@ -313,6 +275,27 @@
     </button>
   </div>
 </header>
+
+{#if hasActiveFilter()}
+  <div class="filter-bar" role="status">
+    {#if ui.filterFav}
+      <button type="button" class="filter-chip" onclick={() => (ui.filterFav = false)} aria-label={t('Remove filter: {0}', t('Favorites'))}>
+        <Glyph name="star-fill" size={12} />{t('Favorites')}<Glyph name="x" size={12} />
+      </button>
+    {/if}
+    {#if ui.filterColor}
+      <button type="button" class="filter-chip" onclick={() => (ui.filterColor = '')} aria-label={t('Remove filter: {0}', ui.filterColor)}>
+        <span class="color-dot dot-{ui.filterColor}"></span>{ui.filterColor}<Glyph name="x" size={12} />
+      </button>
+    {/if}
+    {#if ui.filterTag}
+      <button type="button" class="filter-chip" onclick={() => (ui.filterTag = '')} aria-label={t('Remove filter: {0}', '#' + ui.filterTag)}>
+        #{ui.filterTag}<Glyph name="x" size={12} />
+      </button>
+    {/if}
+    <button type="button" class="filter-clear-all" onclick={clearFilters}>{t('Clear filters')}</button>
+  </div>
+{/if}
 
 <main id="main" class:board={!gallery} class:gallery-view={gallery}>
   {#if gallery}<Gallery id={ui.view!} />{:else}<Board />{/if}

@@ -39,8 +39,8 @@
   // Ids match the shown() checks in App.svelte.
   const tools: { group: string; items: [id: string, label: string][] }[] = $derived([
     { group: t('Top bar'), items: [
-      ['meta', t('Link and folder count')], ['fav', t('Favorites')], ['hidden', t('Show hidden items')],
-      ['color', t('Color label')], ['tags', t('Tags')], ['add', t('New bookmark')],
+      ['meta', t('Link and folder count')], ['filter', t('Filter')], ['hidden', t('Show hidden items')],
+      ['add', t('New bookmark')],
       ['sort', t('Sort')], ['density', t('View density')], ['gallery', t('Open gallery')],
     ] },
     { group: t('Dock'), items: [['pins', t('Pinned links')]] },
