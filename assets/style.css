@@ -33,6 +33,7 @@
   --control: #cfd2d6;
   --text: #0e1319;
   --muted: #525860;
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23525860' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --faint: #5e646e;
   --primary: #11161d;
   --on-primary: #ffffff;
@@ -71,6 +72,7 @@
   --control: #39434f;
   --text: #eef2f7;
   --muted: #b6c0cb;
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b6c0cb' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --faint: #929daa;
   --primary: #f3f7fb;
   --on-primary: #0b0e12;
@@ -103,6 +105,7 @@
   --control: #3a424d;
   --text: #f2f5f9;
   --muted: #b9c2cc;
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b9c2cc' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --faint: #949eaa;
   --primary: #ffffff;
   --on-primary: #000000;
@@ -1595,3 +1598,22 @@ body.popup { width: 380px; height: auto; min-height: 0; overflow: hidden; displa
   .st-group, .st-brand, .st-search { display: none; }
   dialog.dialog-bare { width: calc(100vw - 20px); height: calc(100dvh - 28px); }
 }
+
+/* ---------- selects ----------
+   Every visible select shares one look: left-aligned text and a chevron in the theme's muted tone (--chev)
+   instead of the browser's centered text and cramped arrow. Last in the file so these longhands win over each
+   select's own background shorthand. Overlay selects (.menu-select, .scope) stay invisible. */
+.st-select, .field select, .pp-save select, .add-widget, .sort-pill select {
+  appearance: none;
+  text-align: left; text-align-last: left;
+  padding-right: 30px;
+  background-image: var(--chev);
+  background-position: right 9px center;
+  background-size: 12px 12px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+.st-select:hover, .field select:hover, .pp-save select:hover { border-color: var(--muted); }
+.st-select:focus-visible, .pp-save select:focus-visible, .add-widget:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.st-select { min-width: 180px; max-width: 260px; }
+.sort-pill select { padding-right: 16px; background-position: right 0 center; }
