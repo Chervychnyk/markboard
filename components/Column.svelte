@@ -71,11 +71,8 @@
 >
   <!-- svelte-ignore a11y_no_static_element_interactions (dragging is a pointer-only extra; the menu and keys cover the rest) -->
   <header class="col-head" draggable="true" title={t('Drag to reorder')} ondragstart={(e) => e.dataTransfer!.setData('text/column', k)}>
-    {#if color}
-      <span class="col-dot" style:background={color} aria-hidden="true"></span>
-    {:else if icon}
-      <span class="col-ico" aria-hidden="true"><Glyph name={icon} size={14} /></span>
-    {/if}
+    <!-- A column's color is its top stripe, so the icon never gives way to a dot. -->
+    {#if icon}<span class="col-ico" aria-hidden="true"><Glyph name={icon} size={14} /></span>{/if}
     {#if folderId}<a class="col-name" href={'#' + folderId} title={t('Open gallery')}>{name}</a>{:else}<span class="col-name">{name}</span>{/if}
     {#if count !== undefined}<span class="col-count">{count}</span>{/if}
     <div class="col-actions">
