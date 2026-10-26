@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { flatten, fmt, normalizeWorkspace, periodKey, sanitize, search } from './core.ts';
+import { copyWorkspace, flatten, fmt, newWorkspace, normalizeWorkspace, periodKey, sanitize, search } from './core.ts';
 import { providedCommands } from './commands.ts';
 import type { BNode } from './types.ts';
 
@@ -55,6 +55,7 @@ test('normalizeWorkspace fills fields and migrates a string note', () => {
   assert.deepEqual(w.notes[0]!.checklist, [{ text: 'a', done: true }]);
   assert.deepEqual(w.hiddenCols, []);
   assert.deepEqual(w.collapsed, []);
+  assert.deepEqual(w.hidden, []);
   assert.deepEqual(w.widgets, []);
   assert.equal(normalizeWorkspace({}, 'Notes').name, 'Notes');
 });
@@ -73,4 +74,24 @@ test('bundled template is valid', () => {
   assert.equal(tpl.template, 'markboard');
   for (const f of tpl.folders) for (const l of f.links) assert.match(l.url, /^https:\/\//);
   for (const w of tpl.workspace.widgets) if (w.tz) assert.ok(Intl.supportedValuesOf('timeZone').includes(w.tz), w.tz);
+});
+
+test('copyWorkspace copies the layout and gives notes and widgets their own ids', () => {
+  const w = { ...newWorkspace('Work'), hidden: ['b1'], collapsed: ['f1'] };
+  w.notes = [{ id: 'n1', title: 'Todo', text: 'x', checklist: [] }];
+  w.widgets = [{ id: 'w1', type: 'clock' }];
+  w.order = ['f1', 'note:n1', 'widget:w1'];
+  w.colNames = { 'note:n1': 'Mine' };
+  const c = copyWorkspace(w, 'Home');
+  const [n, x] = [c.notes[0]!.id, c.widgets[0]!.id];
+  assert.equal(c.name, 'Home');
+  assert.notEqual(n, 'n1');
+  assert.notEqual(x, 'w1');
+  assert.deepEqual(c.order, ['f1', `note:${n}`, `widget:${x}`]);
+  assert.deepEqual(c.colNames, { [`note:${n}`]: 'Mine' });
+  assert.deepEqual(c.hidden, ['b1']);
+  c.notes[0]!.text = 'changed';
+  c.hidden.push('b2');
+  assert.equal(w.notes[0]!.text, 'x'); // the original is untouched
+  assert.deepEqual(w.hidden, ['b1']);
 });

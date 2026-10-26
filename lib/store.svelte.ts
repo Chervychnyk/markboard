@@ -1,6 +1,6 @@
 // State, persistence and actions. Components read `app`/`data`/`ui` and re-render on change.
 import { SvelteSet } from 'svelte/reactivity';
-import { DEFAULTS, flatten, LOOK_DEFAULTS, newWorkspace, normalizeWorkspace, sanitize } from './core.ts';
+import { copyWorkspace, DEFAULTS, flatten, LOOK_DEFAULTS, newWorkspace, normalizeWorkspace, sanitize } from './core.ts';
 import { form, toast } from './dialogs.svelte.ts';
 import { initLang, locale, t } from './i18n.ts';
 import type { BNode, Data, Look, Meta, Row, TrashEntry, Workspace } from './types.ts';
@@ -58,6 +58,13 @@ export const look = (): Look => ({ ...LOOK_DEFAULTS, ...ws().look });
 export const wsRoot = () => data.byId.get(ws().root ?? '') ?? data.bar;
 export const metaOf = (n: Row): Meta => (n.id && app.meta[n.id]) || {};
 export const isCollapsed = (key: string) => ws().collapsed.includes(key);
+/** Hiding is per workspace: the bookmark stays on every other board. */
+export const isHidden = (id: string) => ws().hidden.includes(id);
+export function setHidden(id: string, on: boolean) {
+  const w = ws();
+  w.hidden = on ? [...new Set([...w.hidden, id])] : w.hidden.filter((x) => x !== id);
+  saveWs();
+}
 export function toggleCollapsed(key: string) {
   const w = ws();
   w.collapsed = isCollapsed(key) ? w.collapsed.filter((x) => x !== key) : [...w.collapsed, key];
@@ -73,7 +80,7 @@ export function clearFilters() {
 
 export function matchesFilter(n: Row): boolean {
   const m = metaOf(n);
-  if (m.hidden && !app.showHidden) return false;
+  if (n.id && isHidden(n.id) && !app.showHidden) return false;
   if (ui.filterFav && !m.fav) return false;
   if (ui.filterColor && m.color !== ui.filterColor) return false;
   if (ui.filterTag && !m.tags?.includes(ui.filterTag)) return false;
@@ -109,7 +116,7 @@ export function closeItemMenu() {
 export function hideFromMenu() {
   const id = ui.menuId;
   if (!id) return;
-  setMeta(id, { hidden: !app.meta[id]?.hidden });
+  setHidden(id, !isHidden(id));
   closeItemMenu();
 }
 
@@ -218,7 +225,7 @@ export async function edit(n: BNode) {
     { name: 'icon', label: t('Custom icon (emoji or character)'), value: m.icon, maxlength: 8 },
     { name: 'remind', label: t('Remind me at'), type: 'datetime-local', value: m.remind },
     { name: 'pinned', label: t('Pin to the top bar'), type: 'checkbox', value: m.pinned },
-    { name: 'hidden', label: t('Hide from the board'), type: 'checkbox', value: m.hidden },
+    { name: 'hidden', label: t('Hide from the board'), type: 'checkbox', value: isHidden(n.id) },
   ]);
   if (!v) return;
   try {
@@ -228,9 +235,10 @@ export async function edit(n: BNode) {
     return toast((e as Error).message);
   }
   setRemind(n.id, v.remind);
+  setHidden(n.id, v.hidden);
   setMeta(n.id, {
     tags: v.tags.split(',').map((tag: string) => tag.trim().replace(/^#/, '')).filter(Boolean),
-    comment: v.comment, icon: v.icon, remind: v.remind, pinned: v.pinned, hidden: v.hidden,
+    comment: v.comment, icon: v.icon, remind: v.remind, pinned: v.pinned,
   });
 }
 
@@ -538,10 +546,20 @@ export function cycleView() {
 
 export const switchWs = (id: string) => { app.ws = id; saveWs(); };
 
-export function addWorkspace(name: string) {
+/** Like Pikamark, a new workspace starts as a copy of the current one; `empty` keeps only the look. */
+export function addWorkspace(name: string, empty = false) {
   const id = crypto.randomUUID();
-  app.workspaces[id] = newWorkspace(name, $state.snapshot(ws().look));
+  const cur = $state.snapshot(ws());
+  app.workspaces[id] = empty ? newWorkspace(name, cur.look) : copyWorkspace(cur, name);
   switchWs(id);
+}
+
+export async function newWorkspaceDialog() {
+  const r = await form(t('New workspace'), [
+    { name: 'name', label: t('Name'), value: '', required: true },
+    { name: 'empty', label: t('Start with an empty board'), type: 'checkbox', value: false },
+  ]);
+  if (r?.name) addWorkspace(r.name, r.empty);
 }
 
 export function deleteWorkspace() {

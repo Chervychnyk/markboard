@@ -33,8 +33,27 @@ export const LOOK_DEFAULTS: Look = {
 };
 
 export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace => ({
-  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [],
+  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [], hidden: [],
 });
+
+/** A new workspace that starts as a copy of `w`: same layout and look, its own notes and widgets (fresh ids). */
+export function copyWorkspace(w: Workspace, name: string): Workspace {
+  const ids = new Map<string, string>();
+  const fresh = <T extends { id: string }>(x: T): T => {
+    const id = crypto.randomUUID();
+    ids.set(x.id, id);
+    return { ...structuredClone(x), id };
+  };
+  const notes = w.notes.map(fresh), widgets = w.widgets.map(fresh);
+  // Layout keys name notes and widgets by id ("note:<id>", "widget:<id>"); point them at the copies.
+  const key = (k: string) => k.replace(/^(note|widget):(.+)$/, (all, kind, id) => (ids.has(id) ? `${kind}:${ids.get(id)}` : all));
+  const keyed = <V>(r: Record<string, V>) => Object.fromEntries(Object.entries(r).map(([k, v]) => [key(k), v]));
+  return {
+    ...structuredClone(w), name, notes, widgets,
+    order: w.order.map(key), hiddenCols: w.hiddenCols.map(key), collapsed: w.collapsed.map(key),
+    widths: keyed(w.widths), colNames: keyed(w.colNames), colColors: keyed(w.colColors),
+  };
+}
 
 export const DEFAULTS: Data = {
   meta: {}, showHidden: false, galleryMode: 'extended',

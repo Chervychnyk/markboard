@@ -11,7 +11,6 @@ export interface Meta {
   icon?: string;
   remind?: string;
   pinned?: boolean;
-  hidden?: boolean;
   fav?: boolean;
   color?: string;
   url?: string;
@@ -53,6 +52,8 @@ export interface Workspace {
   colColors: Record<string, string>;
   /** columns and subfolders folded to their header */
   collapsed: string[];
+  /** bookmarks and folders hidden from this workspace's board only */
+  hidden: string[];
 }
 
 export interface Session { name: string; at: number; tabs: { title: string; url: string }[] }

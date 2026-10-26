@@ -177,6 +177,7 @@ export const ROWS: Record<string, string[]> = {
   'On a bookmark: favorite, color, tags, comment, reminder': ['На закладці: обране, колір, теги, коментар, нагадування', 'En un marcador: favorito, color, etiquetas, comentario, recordatorio', 'Sur un favori : favori, couleur, tags, commentaire, rappel', 'Auf einem Lesezeichen: Favorit, Farbe, Tags, Kommentar, Erinnerung'],
   'Drag bookmarks and columns to rearrange them': ['Перетягуйте закладки й колонки, щоб упорядкувати їх', 'Arrastra marcadores y columnas para reordenarlos', 'Faites glisser favoris et colonnes pour les réorganiser', 'Lesezeichen und Spalten zum Umordnen ziehen'],
   'Add one with + or the ☆ in the address bar': ['Додайте кнопкою + або ☆ в адресному рядку', 'Añade uno con + o con la ☆ de la barra de direcciones', 'Ajoutez-en un avec + ou l’☆ de la barre d’adresse', 'Mit + oder dem ☆ in der Adressleiste hinzufügen'],
+  'Start with an empty board': ['Почати з порожньої дошки', 'Empezar con un tablero vacío', 'Commencer avec un tableau vide', 'Mit leerem Board beginnen'],
   'Toolbar & header': ['Панель і заголовок', 'Barra y encabezado', 'Barre et en-tête', 'Leiste und Kopfzeile'],
   'Top bar': ['Верхня панель', 'Barra superior', 'Barre du haut', 'Obere Leiste'],
   'Dock': ['Нижня панель', 'Barra inferior', 'Barre du bas', 'Untere Leiste'],

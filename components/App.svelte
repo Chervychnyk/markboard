@@ -7,9 +7,9 @@
   import { t } from '@/lib/i18n';
   import { settings } from '@/lib/settings';
   import {
-    addWorkspace, clearFilters, closeItemMenu, createBookmark, createFolder, cycleTheme, cycleView,
+    clearFilters, closeItemMenu, createBookmark, createFolder, cycleTheme, cycleView,
     data, DATA_IMG, dedupe, deleteFromMenu, hideFromMenu, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, hasActiveFilter, HEX,
-    loadTemplate, look, newNote, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
+    loadTemplate, look, newNote, newWorkspaceDialog, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode } from '@/lib/types';
   import { WIDGETS } from '@/lib/widgets';
@@ -159,18 +159,14 @@
   async function onWorkspace(e: Event & { currentTarget: HTMLSelectElement }) {
     const v = e.currentTarget.value;
     e.currentTarget.value = app.ws; // snap back from the "+ New…"/rename/delete choices
-    if (v === '__new' || v === '__rename') {
-      const r = await form(v === '__new' ? t('New workspace') : t('Rename workspace'), [{ name: 'name', label: t('Name'), value: v === '__new' ? '' : ws().name, required: true }]);
-      if (r && v === '__new') addWorkspace(r.name);
-      else if (r) { ws().name = r.name; saveWs(); }
+    if (v === '__new') return newWorkspaceDialog();
+    if (v === '__rename') {
+      const r = await form(t('Rename workspace'), [{ name: 'name', label: t('Name'), value: ws().name, required: true }]);
+      if (r) { ws().name = r.name; saveWs(); }
     } else if (v === '__delete') deleteWorkspace();
     else switchWs(v);
   }
 
-  async function promptNewWs() {
-    const r = await form(t('New workspace'), [{ name: 'name', label: t('Name'), value: '', required: true }]);
-    if (r?.name) addWorkspace(r.name);
-  }
 </script>
 
 <svelte:window
@@ -322,7 +318,7 @@
         <span>{w.name}</span>
       </button>
     {/each}
-    <button type="button" class="dock-ws-add" title={t('+ New workspace…')} aria-label={t('+ New workspace…')} onclick={promptNewWs}>
+    <button type="button" class="dock-ws-add" title={t('+ New workspace…')} aria-label={t('+ New workspace…')} onclick={newWorkspaceDialog}>
       <Glyph name="plus" size={13} />
     </button>
   </div>

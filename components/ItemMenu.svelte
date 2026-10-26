@@ -2,7 +2,7 @@
   import { toast } from '@/lib/dialogs.svelte';
   import { locale, t } from '@/lib/i18n';
   import {
-    closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, metaOf, moveStep, setMeta, setRemind, ui,
+    closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, isHidden, metaOf, moveStep, setMeta, setRemind, ui,
   } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
@@ -289,8 +289,8 @@
       <div class="im-foot">
         <div class="im-foot-btns">
           <button type="button" class="im-btn" onclick={hideFromMenu}>
-            <Glyph name={m.hidden ? 'eye' : 'eye-off'} size={14} />
-            <span>{m.hidden ? t('Show') : t('Hide')}</span>
+            <Glyph name={isHidden(n.id) ? 'eye' : 'eye-off'} size={14} />
+            <span>{isHidden(n.id) ? t('Show') : t('Hide')}</span>
             <kbd>H</kbd>
           </button>
           <button

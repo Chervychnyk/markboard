@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '@/lib/i18n';
-  import { COLORS, data, dropsAfter, isDue, metaOf, openItemMenu, setMeta, app, toggleSel, ui } from '@/lib/store.svelte';
+  import { COLORS, data, dropsAfter, isDue, isHidden, metaOf, openItemMenu, setMeta, app, toggleSel, ui } from '@/lib/store.svelte';
   import type { Row } from '@/lib/types';
   import Glyph from './Glyph.svelte';
   import Icon from './Icon.svelte';
@@ -13,6 +13,7 @@
   const menuOpen = $derived(!!n.id && ui.menuId === n.id);
   const act = (fn: (e: MouseEvent) => unknown) => (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); fn(e); };
   const id = $derived(n.id!);
+  const hidden = $derived(!!n.id && isHidden(n.id));
   const host = $derived.by(() => {
     try { return new URL(n.url ?? '').hostname.replace(/^www\./, ''); } catch { return n.url ?? ''; }
   });
@@ -22,10 +23,10 @@
   const childCount = $derived(children.length);
 </script>
 
-{#if !m.hidden || app.showHidden}
+{#if !hidden || app.showHidden}
   <div
     class="item {color && 'c-' + color}"
-    class:is-hidden={m.hidden}
+    class:is-hidden={hidden}
     class:selected={on}
     class:menu-open={menuOpen}
     class:fav={m.fav}

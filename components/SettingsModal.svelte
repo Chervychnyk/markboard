@@ -5,8 +5,8 @@
   import { LANGS, locale, t } from '@/lib/i18n';
   import { ACCENT_NAMES, pickBackupFile } from '@/lib/settings';
   import {
-    ACCENTS, addWorkspace, applyData, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData,
-    folderOptions, FONT_NAMES, FONTS, loadTemplate, look, PRESET_NAMES, PRESETS, save, saveWs, app, switchWs, TRASH_DAYS, ws, wsRoot,
+    ACCENTS, applyData, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData,
+    folderOptions, FONT_NAMES, FONTS, loadTemplate, look, newWorkspaceDialog, PRESET_NAMES, PRESETS, save, saveWs, app, switchWs, TRASH_DAYS, ws, wsRoot,
   } from '@/lib/store.svelte';
   import Duplicates from './Duplicates.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
@@ -87,10 +87,6 @@
     location.reload();
   }
 
-  async function createWs() {
-    const r = await form(t('New workspace'), [{ name: 'name', label: t('Name'), value: '', required: true }]);
-    if (r?.name) addWorkspace(r.name);
-  }
 
   async function renameWs(id: string) {
     const target = app.workspaces[id];
@@ -355,7 +351,7 @@
             {/each}
           </div>
           <div class="row wrap">
-            <button type="button" class="btn primary" onclick={createWs}>{t('+ New workspace…')}</button>
+            <button type="button" class="btn primary" onclick={newWorkspaceDialog}>{t('+ New workspace…')}</button>
             {#each Object.entries(TEMPLATES) as [file, name] (file)}
               <button type="button" class="btn" onclick={() => loadTemplate(file)}>{t('Add “{0}” template', t(name))}</button>
             {/each}
