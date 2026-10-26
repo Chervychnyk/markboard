@@ -56,6 +56,7 @@ test('normalizeWorkspace fills fields and migrates a string note', () => {
   assert.deepEqual(w.hiddenCols, []);
   assert.deepEqual(w.collapsed, []);
   assert.deepEqual(w.hidden, []);
+  assert.deepEqual(w.favs, []);
   assert.deepEqual(w.widgets, []);
   assert.equal(normalizeWorkspace({}, 'Notes').name, 'Notes');
 });
@@ -77,7 +78,7 @@ test('bundled template is valid', () => {
 });
 
 test('copyWorkspace copies the layout and gives notes and widgets their own ids', () => {
-  const w = { ...newWorkspace('Work'), hidden: ['b1'], collapsed: ['f1'] };
+  const w = { ...newWorkspace('Work'), hidden: ['b1'], favs: ['b3'], collapsed: ['f1'] };
   w.notes = [{ id: 'n1', title: 'Todo', text: 'x', checklist: [] }];
   w.widgets = [{ id: 'w1', type: 'clock' }];
   w.order = ['f1', 'note:n1', 'widget:w1'];
@@ -90,6 +91,7 @@ test('copyWorkspace copies the layout and gives notes and widgets their own ids'
   assert.deepEqual(c.order, ['f1', `note:${n}`, `widget:${x}`]);
   assert.deepEqual(c.colNames, { [`note:${n}`]: 'Mine' });
   assert.deepEqual(c.hidden, ['b1']);
+  assert.deepEqual(c.favs, ['b3']);
   c.notes[0]!.text = 'changed';
   c.hidden.push('b2');
   assert.equal(w.notes[0]!.text, 'x'); // the original is untouched

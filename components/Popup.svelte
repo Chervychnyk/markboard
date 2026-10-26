@@ -12,6 +12,7 @@
   let flat = $state.raw<BNode[]>([]);
   let recent = $state.raw<BNode[]>([]);
   let meta = $state.raw<Record<string, Meta>>({});
+  let favs = $state.raw<string[]>([]);
   let folder = $state('1');
   let saved = $state(false);
   let q = $state('');
@@ -20,7 +21,7 @@
 
   const hits = $derived.by(() => {
     if (q.trim()) return search(flat, q).filter((n) => n.url);
-    if (scope === 'fav') return flat.filter((n) => n.url && (meta[n.id]?.fav || meta[n.id]?.pinned)).slice(0, 8);
+    if (scope === 'fav') return flat.filter((n) => n.url && (favs.includes(n.id) || meta[n.id]?.pinned)).slice(0, 8);
     if (scope === 'recent') return recent.slice(0, 8);
     return flat.filter((n) => n.url && meta[n.id]?.pinned).slice(0, 3);
   });
@@ -36,7 +37,9 @@
   onMount(async () => {
     const stored = (await browser.storage.local.get(['workspaces', 'ws', 'meta'])) as Partial<Data>;
     meta = stored.meta ?? {};
-    const look: Look = { ...LOOK_DEFAULTS, ...stored.workspaces?.[stored.ws ?? '']?.look };
+    const w = stored.workspaces?.[stored.ws ?? ''];
+    favs = w?.favs ?? [];
+    const look: Look = { ...LOOK_DEFAULTS, ...w?.look };
     const root = document.documentElement;
     root.dataset.theme = look.theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : look.theme;
     root.style.setProperty('--font', FONTS[look.font] ?? FONTS.system!);

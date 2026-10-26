@@ -62,13 +62,15 @@ export const look = (): Look => ({ ...LOOK_DEFAULTS, ...ws().look });
 export const wsRoot = () => data.byId.get(ws().root ?? '') ?? data.bar;
 export const metaOf = (n: Row): Meta => (n.id && app.meta[n.id]) || {};
 export const isCollapsed = (key: string) => ws().collapsed.includes(key);
-/** Hiding is per workspace: the bookmark stays on every other board. */
+/** Hiding and favorites are per workspace: the bookmark stays as it was on every other board. */
 export const isHidden = (id: string) => ws().hidden.includes(id);
-export function setHidden(id: string, on: boolean) {
+export const isFav = (id: string) => ws().favs.includes(id);
+export function mark(list: 'hidden' | 'favs', ids: string[], on: boolean) {
   const w = ws();
-  w.hidden = on ? [...new Set([...w.hidden, id])] : w.hidden.filter((x) => x !== id);
+  w[list] = on ? [...new Set([...w[list], ...ids])] : w[list].filter((x) => !ids.includes(x));
   saveWs();
 }
+export const setHidden = (id: string, on: boolean) => mark('hidden', [id], on);
 export function toggleCollapsed(key: string) {
   const w = ws();
   w.collapsed = isCollapsed(key) ? w.collapsed.filter((x) => x !== key) : [...w.collapsed, key];
@@ -85,7 +87,7 @@ export function clearFilters() {
 export function matchesFilter(n: Row): boolean {
   const m = metaOf(n);
   if (n.id && isHidden(n.id) && !app.showHidden) return false;
-  if (ui.filterFav && !m.fav) return false;
+  if (ui.filterFav && !(n.id && isFav(n.id))) return false;
   if (ui.filterColor && m.color !== ui.filterColor) return false;
   if (ui.filterTag && !m.tags?.includes(ui.filterTag)) return false;
   return true;
@@ -342,12 +344,13 @@ export async function dedupe(groups: BNode[][]) {
     app.meta[g[0]!.id] = {
       ...Object.assign({}, ...[...metas].reverse()), // the kept copy's own color/icon win
       tags: [...new Set(metas.flatMap((m) => m.tags ?? []))],
-      fav: metas.some((m) => m.fav),
       pinned: metas.some((m) => m.pinned),
       comment: [...new Set(metas.map((m) => m.comment).filter(Boolean))].join('\n'),
     };
   }
+  for (const w of Object.values(app.workspaces)) for (const g of groups) if (g.some((n) => w.favs.includes(n.id))) w.favs.push(g[0]!.id);
   save('meta');
+  saveWs();
   await removeMany(groups.flatMap((g) => g.slice(1).map((n) => n.id)));
 }
 

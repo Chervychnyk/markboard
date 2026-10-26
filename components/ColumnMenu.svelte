@@ -35,7 +35,7 @@
     saveWs();
   }
 
-  const run = (fn: () => unknown) => () => { close(); fn(); };
+  const run = (fn: (id: string) => unknown) => () => { const id = c!.folderId!; close(); fn(id); };
 
   // The column jumps to another lane, so the menu follows its header there.
   async function move(dir: -1 | 1) {
@@ -89,10 +89,10 @@
       <div class="im-group">
         <div class="im-label">{t('Manage')}</div>
         <div class="im-grid2">
-          <button type="button" class="im-act" onclick={run(() => open(c.folderId!))}><Glyph name="grid" size={14} /><span>{t('Gallery')}</span></button>
-          <button type="button" class="im-act" onclick={run(() => openAll(c.folderId!))}><Glyph name="external" size={14} /><span>{t('Open all')}</span></button>
-          <button type="button" class="im-act" onclick={run(() => createFolder(c.folderId!))}><Glyph name="folder" size={14} /><span>{t('New folder')}</span></button>
-          <button type="button" class="im-act" onclick={run(() => createBookmark(c.folderId!))}><Glyph name="plus" size={14} /><span>{t('New bookmark')}</span></button>
+          <button type="button" class="im-act" onclick={run(open)}><Glyph name="grid" size={14} /><span>{t('Gallery')}</span></button>
+          <button type="button" class="im-act" onclick={run(openAll)}><Glyph name="external" size={14} /><span>{t('Open all')}</span></button>
+          <button type="button" class="im-act" onclick={run(createFolder)}><Glyph name="folder" size={14} /><span>{t('New folder')}</span></button>
+          <button type="button" class="im-act" onclick={run(createBookmark)}><Glyph name="plus" size={14} /><span>{t('New bookmark')}</span></button>
         </div>
       </div>
     {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '@/lib/i18n';
-  import { COLORS, data, dropsAfter, isDue, isHidden, metaOf, openItemMenu, setMeta, app, toggleSel, ui } from '@/lib/store.svelte';
+  import { COLORS, data, dropsAfter, isDue, isFav, isHidden, mark, metaOf, openItemMenu, app, toggleSel, ui } from '@/lib/store.svelte';
   import type { Row } from '@/lib/types';
   import Glyph from './Glyph.svelte';
   import Icon from './Icon.svelte';
@@ -14,6 +14,7 @@
   const act = (fn: (e: MouseEvent) => unknown) => (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); fn(e); };
   const id = $derived(n.id!);
   const hidden = $derived(!!n.id && isHidden(n.id));
+  const fav = $derived(!!n.id && isFav(n.id));
   const host = $derived.by(() => {
     try { return new URL(n.url ?? '').hostname.replace(/^www\./, ''); } catch { return n.url ?? ''; }
   });
@@ -29,7 +30,7 @@
     class:is-hidden={hidden}
     class:selected={on}
     class:menu-open={menuOpen}
-    class:fav={m.fav}
+    class:fav
     class:folder={!n.url}
     data-id={n.id}
     draggable={n.id ? 'true' : undefined}
@@ -78,8 +79,8 @@
     </a>
     {#if n.id && !ui.selecting}
       <span class="acts">
-        <button class="star" class:on={m.fav} title={t('Favorite')} aria-label={t('Favorite')} onclick={act(() => setMeta(id, { fav: !m.fav }))}>
-          <Glyph name={m.fav ? 'star-fill' : 'star'} size={14} />
+        <button class="star" class:on={fav} title={t('Favorite')} aria-label={t('Favorite')} onclick={act(() => mark('favs', [id], !fav))}>
+          <Glyph name={fav ? 'star-fill' : 'star'} size={14} />
         </button>
         <button
           class="more-btn"

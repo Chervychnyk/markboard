@@ -33,7 +33,7 @@ export const LOOK_DEFAULTS: Look = {
 };
 
 export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace => ({
-  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [], hidden: [],
+  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [], hidden: [], favs: [],
 });
 
 /** A new workspace that starts as a copy of `w`: same layout and look, its own notes and widgets (fresh ids). */

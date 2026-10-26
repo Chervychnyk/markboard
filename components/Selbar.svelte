@@ -1,7 +1,7 @@
 <script lang="ts">
   import { form, toast } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { bulkMeta, COLORS, data, folderOptions, removeMany, app, toggleSelect, ui } from '@/lib/store.svelte';
+  import { bulkMeta, COLORS, data, folderOptions, isFav, mark, removeMany, toggleSelect, ui } from '@/lib/store.svelte';
 
   const nodes = $derived([...ui.selected].map((id) => data.byId.get(id)).filter((n) => !!n));
   const needs = (fn: () => unknown) => () => (nodes.length ? fn() : toast(t('Click items to select them first')));
@@ -21,7 +21,7 @@
 
 <div id="selbar">
   <span class="grow">{t('Selected: {0}', nodes.length)}</span>
-  <button type="button" class="btn" onclick={needs(() => bulkMeta(nodes, { fav: !nodes.every((n) => app.meta[n.id]?.fav) }))}>{t('Favorite')}</button>
+  <button type="button" class="btn" onclick={needs(() => mark('favs', nodes.map((n) => n.id), !nodes.every((n) => isFav(n.id))))}>{t('Favorite')}</button>
   <button type="button" class="btn" onclick={needs(color)}>{t('Color label')}</button>
   <button type="button" class="btn" onclick={needs(move)}>{t('Move…')}</button>
   <button type="button" class="btn" onclick={needs(copy)}>{t('Copy links')}</button>

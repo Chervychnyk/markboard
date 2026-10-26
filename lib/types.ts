@@ -11,7 +11,6 @@ export interface Meta {
   icon?: string;
   remind?: string;
   pinned?: boolean;
-  fav?: boolean;
   color?: string;
   url?: string;
 }
@@ -54,6 +53,8 @@ export interface Workspace {
   collapsed: string[];
   /** bookmarks and folders hidden from this workspace's board only */
   hidden: string[];
+  /** favorites of this workspace */
+  favs: string[];
 }
 
 export interface Session { name: string; at: number; tabs: { title: string; url: string }[] }

@@ -2,7 +2,7 @@
   import { clamp } from '@/lib/core';
   import { t } from '@/lib/i18n';
   import {
-    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, look, matchesFilter, sortRows, app, toggleCollapsed, ui, ws, wsRoot,
+    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, isFav, look, matchesFilter, sortRows, app, toggleCollapsed, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode, Note, Row, Widget } from '@/lib/types';
   import Column from './Column.svelte';
@@ -18,7 +18,7 @@
 
   const cols = $derived.by(() => {
     const r = wsRoot();
-    const favs = data.flat.filter((n) => n.url && app.meta[n.id]?.fav);
+    const favs = data.flat.filter((n) => n.url && isFav(n.id));
     const due = data.flat.filter((n) => isDue(app.meta[n.id] ?? {}));
     const folders = (r.children ?? []).filter((n) => !n.url);
     const rootLinks = (r.children ?? []).filter((n) => n.url);

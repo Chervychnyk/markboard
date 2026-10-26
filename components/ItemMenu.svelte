@@ -2,7 +2,7 @@
   import { toast } from '@/lib/dialogs.svelte';
   import { locale, t } from '@/lib/i18n';
   import {
-    closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, isHidden, metaOf, moveStep, setMeta, setRemind, ui,
+    closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, isFav, isHidden, mark, metaOf, moveStep, setMeta, setRemind, ui,
   } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
@@ -200,8 +200,8 @@
       <div class="im-group">
         <div class="im-label">{t('Remember')}</div>
         <div class="im-grid2">
-          <button type="button" class="im-act" class:on={m.fav} onclick={() => setMeta(n.id, { fav: !m.fav })}>
-            <Glyph name={m.fav ? 'star-fill' : 'star'} size={14} /><span>{t('Favorite')}</span>
+          <button type="button" class="im-act" class:on={isFav(n.id)} onclick={() => mark('favs', [n.id], !isFav(n.id))}>
+            <Glyph name={isFav(n.id) ? 'star-fill' : 'star'} size={14} /><span>{t('Favorite')}</span>
           </button>
           <button type="button" class="im-act" class:on={showComment || !!m.comment} onclick={() => (showComment = !showComment)}>
             <Glyph name="comment" size={14} /><span>{t('Comment')}</span>
