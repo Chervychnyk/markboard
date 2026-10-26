@@ -1,7 +1,8 @@
 // State, persistence and actions. Components read `app`/`data`/`ui` and re-render on change.
 import { SvelteSet } from 'svelte/reactivity';
 import { copyWorkspace, DEFAULTS, flatten, LOOK_DEFAULTS, newWorkspace, normalizeWorkspace, sanitize } from './core.ts';
-import { form, toast } from './dialogs.svelte.ts';
+import NewItem from '@/components/NewItem.svelte';
+import { form, modal, toast } from './dialogs.svelte.ts';
 import { initLang, locale, t } from './i18n.ts';
 import type { BNode, Data, Look, Meta, Row, TrashEntry, Workspace } from './types.ts';
 import { WIDGETS } from './widgets.ts';
@@ -216,26 +217,8 @@ export async function moveStep(id: string, dir: 'up' | 'down' | 'left' | 'right'
   }
 }
 
-export async function createBookmark(parentId?: string) {
-  const v = await form(t('New bookmark'), [
-    { name: 'title', label: t('Title'), required: true },
-    { name: 'url', label: t('URL'), type: 'url', value: 'https://', required: true },
-    { name: 'folder', label: t('Folder'), type: 'select', value: parentId ?? wsRoot().id, options: folderOptions() },
-  ]);
-  if (!v) return;
-  await browser.bookmarks.create({ parentId: v.folder, title: v.title, url: v.url }).catch((e) => toast(e.message));
-  await refresh();
-}
-
-export async function createFolder(parentId?: string) {
-  const v = await form(t('New folder'), [
-    { name: 'title', label: t('Name'), required: true },
-    { name: 'folder', label: t('Folder'), type: 'select', value: parentId ?? wsRoot().id, options: folderOptions() },
-  ]);
-  if (!v) return;
-  await browser.bookmarks.create({ parentId: v.folder, title: v.title }).catch((e) => toast(e.message));
-  await refresh();
-}
+export const createBookmark = (folder?: string) => modal('', NewItem, { bare: true, kind: 'bookmark', folder });
+export const createFolder = (folder?: string) => modal('', NewItem, { bare: true, kind: 'folder', folder });
 
 export async function edit(n: BNode) {
   const m = app.meta[n.id] ?? {};

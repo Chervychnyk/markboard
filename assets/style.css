@@ -1191,6 +1191,7 @@ dialog.dialog-bare {
 }
 dialog.dialog-bare:has(> .welcome) { width: min(440px, calc(100vw - 32px)); height: fit-content; }
 dialog.dialog-bare:has(> .nws) { width: min(540px, calc(100vw - 32px)); height: fit-content; }
+dialog.dialog-bare:has(> .nit) { width: min(440px, calc(100vw - 32px)); }
 
 /* ---------- new workspace ---------- */
 
@@ -1229,6 +1230,14 @@ dialog.dialog-bare:has(> .nws) { width: min(540px, calc(100vw - 32px)); height: 
 .nws-foot { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
 .nws-foot .btn { height: 34px; padding: 0 14px; }
 .nws-foot .btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ---------- new bookmark / folder ---------- */
+
+.nit { gap: 16px; }
+.nit-url { position: relative; display: block; }
+.nit-url > :first-child { position: absolute; left: 12px; top: 50%; translate: 0 -50%; width: 16px; height: 16px; color: var(--faint); pointer-events: none; }
+.nit-url .nws-input { padding-left: 38px; font: 13px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; } /* taste-skill-ignore: URLs read as code */
+.nit .nit-folder { width: 100%; max-width: none; height: 38px; }
 
 /* ---------- first-run welcome ---------- */
 
