@@ -8,7 +8,7 @@
   import { settings } from '@/lib/settings';
   import {
     addWorkspace, allTags, clearFilters, closeItemMenu, COLORS, createBookmark, createFolder, cycleTheme, cycleView,
-    data, DATA_IMG, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, hasActiveFilter, HEX,
+    data, DATA_IMG, dedupe, deleteFromMenu, hideFromMenu, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, hasActiveFilter, HEX,
     loadTemplate, look, newNote, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode } from '@/lib/types';
@@ -105,6 +105,8 @@
       if (ui.selecting) return toggleSelect();
       if (hasActiveFilter()) return clearFilters();
     }
+    if (ui.menuId && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); return hideFromMenu(); }
+    if (ui.menuId && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); return deleteFromMenu(); }
     const hit = COMMANDS.find((c) => c.key?.toLowerCase() === e.key.toLowerCase());
     if (hit) { e.preventDefault(); run(hit.id); }
   }

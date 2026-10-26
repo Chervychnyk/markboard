@@ -2,7 +2,7 @@
   import { toast } from '@/lib/dialogs.svelte';
   import { locale, t } from '@/lib/i18n';
   import {
-    closeItemMenu, COLORS, data, folderOptions, metaOf, moveStep, removeMany, setMeta, setRemind, ui,
+    closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, metaOf, moveStep, setMeta, setRemind, ui,
   } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
@@ -13,6 +13,16 @@
   let showComment = $state(false);
   let addingTag = $state(false);
   let tagInput = $state('');
+  let el = $state<HTMLElement>();
+  let height = $state(390);
+  // Re-measure whenever the content changes, so the menu flips above the row by its real height.
+  $effect(() => {
+    void subview; void showComment; // their content swaps the observed children
+    if (!el) return;
+    const ro = new ResizeObserver(() => (height = el!.scrollHeight)); // full content height, even while capped
+    for (const c of [el, ...el.children]) ro.observe(c);
+    return () => ro.disconnect();
+  });
 
   $effect(() => {
     void ui.menuId;
@@ -25,11 +35,14 @@
   const pos = $derived.by(() => {
     const r = ui.menuRect;
     if (!r) return { top: '80px', left: '80px' };
-    const w = 308;
-    const h = subview === 'remind' ? 320 : 420;
-    const left = Math.max(12, Math.min(innerWidth - w - 12, r.right - w));
-    const top = r.bottom + h + 16 < innerHeight ? r.bottom + 6 : Math.max(12, r.top - h - 6);
-    return { top: `${Math.round(top)}px`, left: `${Math.round(left)}px` };
+    const w = Math.min(Math.max(r.right - r.left, 308), 400, innerWidth - 24);
+    const left = Math.max(12, Math.min(innerWidth - w - 12, r.left));
+    const below = innerHeight - r.bottom - 18, above = r.top - 18;
+    // Prefer below, then above; if neither fits, take the roomier side and scroll inside it.
+    const down = height <= below || (height > above && below >= above);
+    const max = Math.max(160, down ? below : above);
+    const top = down ? r.bottom + 6 : r.top - 6 - Math.min(height, max);
+    return { top: `${Math.round(top)}px`, left: `${Math.round(left)}px`, width: `${Math.round(w)}px`, max: `${Math.round(max)}px` };
   });
 
   function toLocalIso(d: Date) {
@@ -83,12 +96,15 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div class="im-backdrop" onclick={closeItemMenu}></div>
   <div
+    bind:this={el}
     class="item-menu"
     role="dialog"
     tabindex="-1"
     aria-label={n.title || t('Edit bookmark')}
     style:top={pos.top}
     style:left={pos.left}
+    style:width={pos.width}
+    style:max-height={pos.max}
     onkeydown={(e) => e.key === 'Escape' && (e.stopPropagation(), closeItemMenu())}
   >
     {#if subview === 'remind'}
@@ -271,14 +287,18 @@
       </div>
 
       <div class="im-foot">
-        <p class="im-note">{t('Shared across workspaces: deleting removes it everywhere. Hide it to keep it in just this one')}</p>
         <div class="im-foot-btns">
-          <button type="button" class="im-btn" onclick={() => { setMeta(n.id, { hidden: !m.hidden }); closeItemMenu(); }}>
+          <button type="button" class="im-btn" onclick={hideFromMenu}>
             <Glyph name={m.hidden ? 'eye' : 'eye-off'} size={14} />
             <span>{m.hidden ? t('Show') : t('Hide')}</span>
             <kbd>H</kbd>
           </button>
-          <button type="button" class="im-btn danger" onclick={() => { const id = n.id; closeItemMenu(); removeMany([id]); }}>
+          <button
+            type="button"
+            class="im-btn danger"
+            title={t('Shared across workspaces: deleting removes it everywhere. Hide it to keep it in just this one')}
+            onclick={deleteFromMenu}
+          >
             <Glyph name="trash" size={14} />
             <span>{t('Delete')}</span>
             <kbd>Del</kbd>

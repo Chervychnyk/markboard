@@ -85,7 +85,7 @@ export function allTags(): string[] {
 
 export function openItemMenu(id: string, anchor: Element) {
   if (ui.menuId === id) { closeItemMenu(); return; }
-  const r = anchor.getBoundingClientRect();
+  const r = (anchor.closest('.item') ?? anchor).getBoundingClientRect(); // the menu lines up with the whole row
   ui.menuId = id;
   ui.menuRect = { top: r.top, left: r.left, right: r.right, bottom: r.bottom };
 }
@@ -93,6 +93,21 @@ export function openItemMenu(id: string, anchor: Element) {
 export function closeItemMenu() {
   ui.menuId = null;
   ui.menuRect = null;
+}
+
+/** The item menu's Hide and Delete, shared by its buttons and the H / Del keys. */
+export function hideFromMenu() {
+  const id = ui.menuId;
+  if (!id) return;
+  setMeta(id, { hidden: !app.meta[id]?.hidden });
+  closeItemMenu();
+}
+
+export function deleteFromMenu() {
+  const id = ui.menuId;
+  if (!id) return;
+  closeItemMenu();
+  removeMany([id]);
 }
 
 /** Fills what old or imported workspaces lack; the current one must exist. Not during render: it writes state. */
