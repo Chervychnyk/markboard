@@ -338,7 +338,7 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .col.folded .col-fold svg { transform: rotate(-90deg); }
 
 .col-list {
-  display: flex; flex-direction: column; justify-content: flex-start; gap: 4px;
+  display: flex; flex-direction: column; justify-content: flex-start; gap: 3px;
   padding: 6px;
 }
 .col.over { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -350,12 +350,7 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- nested subfolders inside board columns ---------- */
 
-.subfolder {
-  display: flex; flex-direction: column; gap: 3px;
-  padding: 6px;
-  border: 1px solid var(--border); border-radius: var(--radius-control);
-  background: var(--raised);
-}
+.subfolder { display: flex; flex-direction: column; gap: 3px; }
 .subfolder-head {
   display: flex; align-items: center; gap: 6px;
   min-height: 26px; padding: 0 4px;
@@ -374,18 +369,27 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .subfolder-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .subfolder-count { font-size: 11.5px; color: var(--faint); }
-.subfolder-list { display: flex; flex-direction: column; gap: 3px; }
-.subfolder-list .item { background: var(--surface); border-color: var(--rule); }
+.subfolder-list {
+  display: flex; flex-direction: column; gap: 3px;
+  margin-left: 13px; padding-left: 5px; border-left: 1px solid var(--rule);
+}
 
 /* ---------- bookmark rows ---------- */
 
 .item {
   position: relative; display: flex; align-items: center;
-  border: 1px solid var(--rule);
+  border: 1px solid transparent;
   border-radius: var(--radius-control);
-  background: var(--raised);
+  background: transparent;
   transition: background-color 0.12s ease, border-color 0.12s ease;
 }
+/* Board rows are ruled, not boxed: a hairline between neighbours, hidden around the hovered row. */
+.col-list > .item + .item::after, .subfolder-list > .item + .item::after {
+  content: ""; position: absolute; left: 8px; right: 8px; top: -2.5px; height: 1px;
+  background: var(--rule); pointer-events: none;
+}
+.col-list > .item:is(:hover, .menu-open, .selected)::after, .col-list > .item:is(:hover, .menu-open, .selected) + .item::after,
+.subfolder-list > .item:is(:hover, .menu-open, .selected)::after, .subfolder-list > .item:is(:hover, .menu-open, .selected) + .item::after { opacity: 0; }
 .item::before {
   content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2.5px;
   border-radius: 2px; background: transparent; opacity: 0;
@@ -411,7 +415,7 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .dot-purple { background: var(--label-purple); }
 .dot-pink { background: var(--label-pink); }
 
-.item:hover { background: var(--hover); border-color: var(--border); }
+.item:hover { background: var(--hover); }
 /* The row stays lit above the menu backdrop. */
 .item.menu-open { z-index: 46; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .item.selected { background: var(--active); border-color: var(--accent); }
@@ -600,9 +604,9 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
 
 .session {
   position: relative; display: flex; align-items: center;
-  border: 1px solid var(--rule); border-radius: var(--radius-control); background: var(--raised);
+  border: 1px solid transparent; border-radius: var(--radius-control); background: transparent;
 }
-.session:hover { background: var(--hover); border-color: var(--border); }
+.session:hover { background: var(--hover); }
 .session-open {
   display: flex; align-items: center; gap: 8px;
   flex: 1; min-width: 0; padding: 6px 30px 6px 8px;
