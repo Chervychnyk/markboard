@@ -16,6 +16,7 @@
     for (let n: BNode | undefined = folder; n; n = data.byId.get(n.parentId!)) out.unshift(n);
     return out;
   });
+  const parent = $derived(crumbs.at(-2));
 
   const allKids = $derived(folder.children ?? []);
   const tags = $derived(
@@ -62,12 +63,13 @@
 <header class="gallery-head">
   <div class="gallery-title-block">
     <nav class="crumbs" aria-label={t('Board')}>
-      <button class="crumb-btn" onclick={() => open(null)}>
-        <Glyph name="chevron-left" size={13} />
-        <span>{t('Board')}</span>
+      <!-- Back goes up one level: the parent folder, or the board from a top-level folder. -->
+      <button class="crumb-back" title={parent ? parent.title : t('Back to board')} aria-label={parent ? parent.title : t('Back to board')} onclick={() => open(parent?.id ?? null)}>
+        <Glyph name="left" size={14} />
       </button>
+      <button class="crumb-link" onclick={() => open(null)}>{t('Board')}</button>
       {#each crumbs.slice(0, -1) as c (c.id)}
-        <span class="crumb-sep" aria-hidden="true">›</span>
+        <span class="crumb-sep" aria-hidden="true">/</span>
         <a class="crumb-link" href={'#' + c.id}>{c.title}</a>
       {/each}
     </nav>

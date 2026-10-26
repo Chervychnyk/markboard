@@ -767,17 +767,23 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
 }
 .gallery-title-block { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; }
 .crumbs {
-  display: flex; align-items: center; gap: 4px; min-width: 0;
-  font-size: 12.5px; color: var(--muted);
+  display: flex; align-items: center; gap: 2px; min-width: 0;
+  font-size: 13px; color: var(--muted);
 }
-.crumb-btn, .crumb-link {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 2px 4px; margin: 0 -2px; border: 0; border-radius: 4px; background: none;
-  color: var(--muted); font-size: 12.5px; font-weight: 500; cursor: pointer;
+.crumb-back {
+  flex: none; width: 26px; height: 26px; margin-right: 6px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: var(--radius-control);
+  background: var(--surface); color: var(--muted); cursor: pointer;
+}
+.crumb-back:hover { border-color: var(--control); color: var(--text); }
+.crumb-link {
+  min-width: 0; padding: 3px 5px; border: 0; border-radius: 4px; background: none;
+  color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.crumb-btn:hover, .crumb-link:hover { color: var(--text); background: var(--hover); }
-.crumb-sep { color: var(--faint); font-size: 12px; }
+.crumb-link:hover { color: var(--text); background: var(--hover); }
+.crumb-sep { flex: none; padding: 0 1px; color: var(--control); font-size: 13px; }
 .gallery-title-row { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
 .gallery-title {
   margin: 0; min-width: 0;
