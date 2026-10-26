@@ -54,6 +54,7 @@ test('normalizeWorkspace fills fields and migrates a string note', () => {
   assert.equal(w.notes[0]!.text, 'hello');
   assert.deepEqual(w.notes[0]!.checklist, [{ text: 'a', done: true }]);
   assert.deepEqual(w.hiddenCols, []);
+  assert.deepEqual(w.collapsed, []);
   assert.deepEqual(w.widgets, []);
   assert.equal(normalizeWorkspace({}, 'Notes').name, 'Notes');
 });

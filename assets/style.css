@@ -44,6 +44,7 @@
   --label-red: #c14b4b;
   --label-orange: #c26522;
   --label-amber: #b07d1a;
+  --label-lime: #5e8a1c;
   --label-green: #2f7d4f;
   --label-teal: #1d7a74;
   --label-blue: #1d5fbf;
@@ -81,6 +82,7 @@
   --label-red: #e07171;
   --label-orange: #d98845;
   --label-amber: #d4a74a;
+  --label-lime: #a3c95a;
   --label-green: #62b98b;
   --label-teal: #58b8b0;
   --label-blue: #85b4ff;
@@ -112,6 +114,7 @@
   --label-red: #e37878;
   --label-orange: #d79555;
   --label-amber: #d8ae55;
+  --label-lime: #abd063;
   --label-green: #6cc294;
   --label-teal: #62c0b8;
   --label-blue: #8cb8ff;
@@ -328,6 +331,11 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .col-head:hover .col-kebab, .col-kebab:focus-visible { opacity: 1; }
 .col-kebab:hover { background: var(--active); color: var(--text); }
+.col.folded .col-head { border-bottom: 0; }
+.col-kebab.col-hover { opacity: 0; }
+.col-head:hover .col-hover, .col-head:focus-within .col-hover { opacity: 1; }
+@media (hover: none) { .col-kebab.col-hover { opacity: 0.55; } }
+.col.folded .col-fold svg { transform: rotate(-90deg); }
 
 .col-list {
   display: flex; flex-direction: column; justify-content: flex-start; gap: 4px;
@@ -385,6 +393,7 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .item.c-red::before { background: var(--label-red); opacity: 1; }
 .item.c-orange::before { background: var(--label-orange); opacity: 1; }
 .item.c-amber::before { background: var(--label-amber); opacity: 1; }
+.item.c-lime::before { background: var(--label-lime); opacity: 1; }
 .item.c-green::before { background: var(--label-green); opacity: 1; }
 .item.c-teal::before { background: var(--label-teal); opacity: 1; }
 .item.c-blue::before { background: var(--label-blue); opacity: 1; }
@@ -395,6 +404,7 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .dot-red { background: var(--label-red); }
 .dot-orange { background: var(--label-orange); }
 .dot-amber { background: var(--label-amber); }
+.dot-lime { background: var(--label-lime); }
 .dot-green { background: var(--label-green); }
 .dot-teal { background: var(--label-teal); }
 .dot-blue { background: var(--label-blue); }
@@ -446,8 +456,11 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
   display: inline-flex; align-items: center; justify-content: center;
   border: 0; border-radius: 5px; background: transparent;
   color: var(--faint); cursor: pointer; opacity: 0;
-  transition: opacity 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  transition: opacity 0.12s ease, background-color 0.12s ease, color 0.12s ease, width 0.15s ease;
 }
+/* The more button takes no room at rest, so a favorite's star sits at the right edge and slides left on hover. */
+.acts .more-btn { width: 0; overflow: hidden; }
+.item:hover .acts .more-btn, .item:focus-within .acts .more-btn, .item.menu-open .acts .more-btn { width: 24px; }
 .item:hover .acts button, .item:focus-within .acts button, .item.menu-open .acts button { opacity: 1; }
 .item.fav .acts .star { opacity: 0.72; color: var(--text); }
 .item:hover .acts .star, .item.fav:hover .acts .star { opacity: 1; }
@@ -483,8 +496,14 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
   background: var(--active); color: var(--muted);
   font-size: 11px; font-weight: 500;
 }
-.whead-acts { display: flex; align-items: center; gap: 1px; margin-left: auto; opacity: 0; transition: opacity 0.12s ease; }
-.widget:hover .whead-acts, .whead-acts:focus-within { opacity: 1; }
+/* Actions take no room until hover, so the pill sits at the right edge and slides left as they appear. */
+.whead-acts {
+  display: flex; align-items: center; gap: 1px; flex: none;
+  max-width: 0; margin-left: -6px; overflow: hidden; opacity: 0;
+  transition: max-width 0.15s ease, margin-left 0.15s ease, opacity 0.12s ease;
+}
+.widget:hover .whead-acts, .whead-acts:focus-within { max-width: 48px; margin-left: 0; opacity: 1; }
+
 .whead button {
   width: 22px; height: 22px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -794,21 +813,18 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
 .gallery .acts { top: auto; bottom: 10px; right: 8px; transform: none; }
 .gallery .item.fav .acts .star { position: static; }
 
-/* Folder tiles use a 2×2 stack of child favicons + titles, just like Pikamark S10. */
+/* Folder tiles preview up to eight child icons in a 4×2 grid; the last slot can count the rest. */
 .gallery .folder-preview {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
 }
 .folder-preview .mini {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  padding: 6px 4px;
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1; max-height: 40px; min-width: 0;
   border: 1px solid var(--rule); border-radius: 6px; background: var(--raised);
-  min-width: 0;
+  color: var(--muted);
 }
+.folder-preview .mini.more { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .folder-preview .ico { width: 16px; height: 16px; padding: 0; border: 0; border-radius: 0; background: transparent; }
-.folder-preview .mini-title {
-  max-width: 100%; font-size: 11px; color: var(--muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
 .gallery:not(.mode-list) .item.folder > .item-link > .ico { display: none; }
 .gallery:not(.mode-list) .item.previewless > .item-link > .ico { display: inline-flex; }
 .gallery:not(.mode-list) .item.folder .folder-inline-ico { display: inline-flex; }
@@ -976,6 +992,7 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
 .im-swatch.sw-red { background: var(--label-red); }
 .im-swatch.sw-orange { background: var(--label-orange); }
 .im-swatch.sw-amber { background: var(--label-amber); }
+.im-swatch.sw-lime { background: var(--label-lime); }
 .im-swatch.sw-green { background: var(--label-green); }
 .im-swatch.sw-teal { background: var(--label-teal); }
 .im-swatch.sw-blue { background: var(--label-blue); }
@@ -1440,6 +1457,8 @@ body.popup { width: 380px; height: auto; min-height: 0; overflow: hidden; displa
 
 @media (max-width: 760px), (hover: none) {
   .acts button { opacity: 1; }
+  .acts .more-btn { width: 24px; }
+  .whead-acts { max-width: 48px; margin-left: 0; opacity: 1; }
 }
 
 @media (max-width: 760px) {

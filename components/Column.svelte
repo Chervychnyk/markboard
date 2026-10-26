@@ -2,7 +2,9 @@
   import type { Snippet } from 'svelte';
   import { form, type Extra } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { createBookmark, deleteNote, dropBookmark, HEX, openAll, saveWs, ws } from '@/lib/store.svelte';
+  import {
+    createBookmark, deleteNote, dropBookmark, HEX, isCollapsed, open, openAll, saveWs, toggleCollapsed, ui, ws,
+  } from '@/lib/store.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
 
   let {
@@ -15,6 +17,7 @@
 
   const color = $derived(HEX.test(ws().colColors[k] ?? '') ? ws().colColors[k] : null);
   const name = $derived(ws().colNames[k] || title);
+  const folded = $derived(isCollapsed(k));
 
   function drop(e: DragEvent) {
     e.preventDefault();
@@ -58,6 +61,7 @@
   bind:this={el}
   class="col"
   class:over
+  class:folded
   data-key={k}
   style:--col-color={color ?? 'transparent'}
   ondragover={(e) => { e.preventDefault(); over = true; }}
@@ -76,14 +80,23 @@
     {#if count !== undefined}<span class="col-count">{count}</span>{/if}
     <div class="col-actions">
       {#if folderId}
-        <button class="col-kebab" title={t('New bookmark')} aria-label={t('New bookmark')} onclick={() => createBookmark(folderId)}>
+        <button class="col-kebab col-hover" title={t('Search this folder')} aria-label={t('Search this folder')} onclick={() => { ui.focusSearch = true; open(folderId); }}>
+          <Glyph name="search" size={14} />
+        </button>
+        <button class="col-kebab col-hover" title={t('Open gallery')} aria-label={t('Open gallery')} onclick={() => open(folderId)}>
+          <Glyph name="grid" size={14} />
+        </button>
+        <button class="col-kebab col-hover" title={t('New bookmark')} aria-label={t('New bookmark')} onclick={() => createBookmark(folderId)}>
           <Glyph name="plus" size={14} />
         </button>
       {/if}
       <button class="col-kebab" title={t('Column options')} aria-label={t('Column options')} onclick={menu}>
         <Glyph name="more" size={15} />
       </button>
+      <button class="col-kebab col-fold" aria-expanded={!folded} title={folded ? t('Expand') : t('Collapse')} aria-label={folded ? t('Expand') : t('Collapse')} onclick={() => toggleCollapsed(k)}>
+        <Glyph name="chevron" size={13} />
+      </button>
     </div>
   </header>
-  <div class="col-list">{@render children()}</div>
+  {#if !folded}<div class="col-list">{@render children()}</div>{/if}
 </section>

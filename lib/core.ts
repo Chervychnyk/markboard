@@ -33,7 +33,7 @@ export const LOOK_DEFAULTS: Look = {
 };
 
 export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace => ({
-  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {},
+  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [],
 });
 
 export const DEFAULTS: Data = {

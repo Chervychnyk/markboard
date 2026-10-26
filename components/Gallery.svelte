@@ -50,6 +50,13 @@
     app.galleryMode = mode;
     save('galleryMode');
   }
+  let searchEl = $state<HTMLInputElement>();
+  $effect(() => {
+    if (ui.focusSearch && searchEl) {
+      searchEl.focus();
+      ui.focusSearch = false;
+    }
+  });
 </script>
 
 <header class="gallery-head">
@@ -86,7 +93,7 @@
   <div class="gallery-tools">
     <label class="gallery-search">
       <Glyph name="search" size={14} />
-      <input type="search" placeholder={t('Search bookmarks…')} aria-label={t('Search')} bind:value={q} />
+      <input type="search" placeholder={t('Search bookmarks…')} aria-label={t('Search')} bind:value={q} bind:this={searchEl} />
     </label>
     <div class="seg" role="group" aria-label={t('Gallery layout')}>
       {#each modes as [mode, label, icon] (mode)}

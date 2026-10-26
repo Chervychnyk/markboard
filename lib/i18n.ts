@@ -159,6 +159,9 @@ export const ROWS: Record<string, string[]> = {
 
   // settings
   'Look of “{0}”': ['Вигляд «{0}»', 'Aspecto de «{0}»', 'Apparence de « {0} »', 'Aussehen von „{0}“'],
+  'Search this folder': ['Шукати в цій теці', 'Buscar en esta carpeta', 'Rechercher dans ce dossier', 'In diesem Ordner suchen'],
+  'Expand': ['Розгорнути', 'Expandir', 'Déplier', 'Ausklappen'],
+  'Collapse': ['Згорнути', 'Contraer', 'Replier', 'Einklappen'],
   'Toolbar & header': ['Панель і заголовок', 'Barra y encabezado', 'Barre et en-tête', 'Leiste und Kopfzeile'],
   'Top bar': ['Верхня панель', 'Barra superior', 'Barre du haut', 'Obere Leiste'],
   'Dock': ['Нижня панель', 'Barra inferior', 'Barre du bas', 'Untere Leiste'],

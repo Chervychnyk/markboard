@@ -16,9 +16,9 @@
   const host = $derived.by(() => {
     try { return new URL(n.url ?? '').hostname.replace(/^www\./, ''); } catch { return n.url ?? ''; }
   });
-  // Folder tiles preview their first four children as a 2×2 grid of mini cards.
+  // Folder tiles preview up to eight children as icons; past eight, the last slot counts the rest.
   const children = $derived(n.id && !n.url ? data.byId.get(n.id)?.children ?? [] : []);
-  const preview = $derived(children.slice(0, 4));
+  const preview = $derived(children.slice(0, children.length > 8 ? 7 : 8));
   const childCount = $derived(children.length);
 </script>
 
@@ -42,11 +42,11 @@
       {#if preview.length}
         <span class="folder-preview" aria-hidden="true">
           {#each preview as p (p.id)}
-            <span class="mini">
-              <Icon n={p} />
-              <span class="mini-title">{p.title}</span>
+            <span class="mini" title={p.title}>
+              {#if p.url}<Icon n={p} />{:else}<Glyph name="folder" size={14} />{/if}
             </span>
           {/each}
+          {#if childCount > preview.length}<span class="mini more">+{childCount - preview.length}</span>{/if}
         </span>
       {/if}
       <Icon {n} {m} />

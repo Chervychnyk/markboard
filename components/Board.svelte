@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { SvelteSet } from 'svelte/reactivity';
   import { clamp } from '@/lib/core';
   import { t } from '@/lib/i18n';
   import {
-    data, deleteSession, dropBookmark, hasActiveFilter, isDue, look, matchesFilter, sortRows, app, ws, wsRoot,
+    data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, look, matchesFilter, sortRows, app, toggleCollapsed, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode, Note, Row, Widget } from '@/lib/types';
   import Column from './Column.svelte';
@@ -16,12 +15,6 @@
   const w = $derived(ws());
   const l = $derived(look());
   let vw = $state(typeof window !== 'undefined' ? window.innerWidth : 1440);
-  const collapsed = new SvelteSet<string>();
-
-  function toggleSub(id: string) {
-    if (collapsed.has(id)) collapsed.delete(id);
-    else collapsed.add(id);
-  }
 
   const cols = $derived.by(() => {
     const r = wsRoot();
@@ -83,6 +76,7 @@
   }
 
   function estHeight(c: Col): number {
+    if (!c.widget && isCollapsed(c.k)) return 38;
     if (c.widget) {
       return c.widget.type === 'photo' ? 196 : c.widget.type === 'snippet' ? 132 : c.widget.type === 'counter' ? 92 : 76;
     }
@@ -95,7 +89,7 @@
     const subs = subFoldersOf(c);
     const subH = subs.reduce((s, f) => {
       const n = (f.children ?? []).filter((x) => matchesFilter(x)).length;
-      return s + 34 + (collapsed.has(f.id) ? 0 : n * 31 + 8);
+      return s + 34 + (isCollapsed(f.id) ? 0 : n * 31 + 8);
     }, 0);
     const links = directLinksOf(c).length;
     return 46 + subH + Math.max(1, links) * 31;
@@ -152,23 +146,23 @@
               {#if !hasActiveFilter() || subLinks.length}
                 <div
                   class="subfolder"
-                  class:collapsed={collapsed.has(sub.id)}
+                  class:collapsed={isCollapsed(sub.id)}
                   ondragover={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   ondrop={(e) => { e.preventDefault(); e.stopPropagation(); dropBookmark(e, sub.id); }}
                   role="group"
                   aria-label={sub.title}
                 >
                   <div class="subfolder-head">
-                    <button type="button" class="subfolder-toggle" onclick={() => toggleSub(sub.id)} aria-expanded={!collapsed.has(sub.id)} title={sub.title}>
+                    <button type="button" class="subfolder-toggle" onclick={() => toggleCollapsed(sub.id)} aria-expanded={!isCollapsed(sub.id)} title={sub.title}>
                       <Glyph name="folder" size={14} />
                     </button>
                     <a class="subfolder-name" href={'#' + sub.id} title={t('Open gallery')}>{sub.title}</a>
                     <span class="subfolder-count">{subLinks.length}</span>
-                    <button type="button" class="subfolder-chev" onclick={() => toggleSub(sub.id)} aria-label={sub.title}>
+                    <button type="button" class="subfolder-chev" onclick={() => toggleCollapsed(sub.id)} aria-label={sub.title}>
                       <Glyph name="chevron" size={12} />
                     </button>
                   </div>
-                  {#if !collapsed.has(sub.id) && subLinks.length}
+                  {#if !isCollapsed(sub.id) && subLinks.length}
                     <div class="subfolder-list">
                       {#each subLinks as item (item.id ?? item.url)}<Item n={item} />{/each}
                     </div>

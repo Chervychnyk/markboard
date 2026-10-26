@@ -6,7 +6,7 @@ import { initLang, locale, t } from './i18n.ts';
 import type { BNode, Data, Look, Meta, Row, TrashEntry, Workspace } from './types.ts';
 import { WIDGETS } from './widgets.ts';
 
-export const COLORS = ['', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'purple', 'pink'];
+export const COLORS = ['', 'red', 'orange', 'amber', 'lime', 'green', 'teal', 'blue', 'purple', 'pink'];
 export const THEMES = ['system', 'light', 'dark', 'black'];
 export const ACCENTS = ['#1d5fbf', '#0f766e', '#2f7d4f', '#b45309', '#b42318'];
 export const FONTS: Record<string, string> = { system: '"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif', serif: 'Georgia, serif', mono: 'ui-monospace, Menlo, monospace', rounded: 'ui-rounded, system-ui, sans-serif' }; // taste-skill-ignore: user typeface choice
@@ -43,6 +43,8 @@ export const ui = $state({
   menuId: null as string | null,
   menuRect: null as { top: number; left: number; right: number; bottom: number } | null,
   aside: true,
+  /** set when a column's search button opens the gallery; the gallery focuses its search and clears it */
+  focusSearch: false,
 });
 
 export const save = (...keys: (keyof Data)[]) =>
@@ -53,6 +55,12 @@ export const ws = (): Workspace => app.workspaces[app.ws]!;
 export const look = (): Look => ({ ...LOOK_DEFAULTS, ...ws().look });
 export const wsRoot = () => data.byId.get(ws().root ?? '') ?? data.bar;
 export const metaOf = (n: Row): Meta => (n.id && app.meta[n.id]) || {};
+export const isCollapsed = (key: string) => ws().collapsed.includes(key);
+export function toggleCollapsed(key: string) {
+  const w = ws();
+  w.collapsed = isCollapsed(key) ? w.collapsed.filter((x) => x !== key) : [...w.collapsed, key];
+  saveWs();
+}
 
 export const hasActiveFilter = () => ui.filterFav || !!ui.filterColor || !!ui.filterTag;
 export function clearFilters() {

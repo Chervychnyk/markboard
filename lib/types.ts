@@ -51,6 +51,8 @@ export interface Workspace {
   order: string[];
   colNames: Record<string, string>;
   colColors: Record<string, string>;
+  /** columns and subfolders folded to their header */
+  collapsed: string[];
 }
 
 export interface Session { name: string; at: number; tabs: { title: string; url: string }[] }
