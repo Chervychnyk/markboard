@@ -7,20 +7,28 @@
   import { t } from '@/lib/i18n';
   import { settings } from '@/lib/settings';
   import {
-    addWorkspace, bulkRename, cycleTheme, cycleView, data, DATA_IMG, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, HEX,
-    loadTemplate, look, newNote, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws,
+    addWorkspace, allTags, clearFilters, closeItemMenu, COLORS, createBookmark, createFolder, cycleTheme, cycleView,
+    data, DATA_IMG, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData, FONTS, hasActiveFilter, HEX,
+    loadTemplate, look, newNote, open, PRESETS, save, saveSession, saveTabs, saveWs, app, switchWs, toggleSelect, TRASH_DAYS, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
+  import type { BNode } from '@/lib/types';
+  import { WIDGETS } from '@/lib/widgets';
   import Board from './Board.svelte';
   import Dialogs from './Dialogs.svelte';
   import Duplicates from './Duplicates.svelte';
   import Gallery from './Gallery.svelte';
+  import Glyph from './Glyph.svelte';
   import Help from './Help.svelte';
+  import ItemMenu from './ItemMenu.svelte';
+  import Mark from './Mark.svelte';
   import Pins from './Pins.svelte';
   import Selbar from './Selbar.svelte';
   import Trash from './Trash.svelte';
 
   const l = $derived(look());
   const gallery = $derived(!!ui.view && data.byId.has(ui.view)); // a deleted folder falls back to the board
+  const tags = $derived(allTags());
+  const firstFolderId = $derived((wsRoot().children ?? []).find((n) => !n.url)?.id ?? wsRoot().id);
 
   // --- look ---
 
@@ -37,17 +45,29 @@
     root.style.setProperty('--accent', HEX.test(l.accent) ? l.accent : '');
     root.style.setProperty('--font', FONTS[l.font] ?? FONTS.system!);
     root.style.setProperty('--panel-alpha', `${clamp(l.panelOpacity, 30, 100)}%`);
-    const cols = clamp(l.columns, 0, 12);
-    root.style.setProperty('--col-w', cols ? `calc((100vw - 32px - ${(cols - 1) * 12}px) / ${cols})` : '');
     document.body.classList.toggle('compact', !!l.compact);
   });
 
   const background = $derived.by(() => {
     const [c1, c2] = PRESETS[l.bgPreset] ?? [l.bgColor, l.bgColor2].map((c) => (HEX.test(c) ? c : '#000000'));
     return l.bgKind === 'solid' ? (HEX.test(l.bgColor) ? l.bgColor : '')
-      : l.bgKind === 'gradient' ? `linear-gradient(135deg, ${c1}, ${c2})`
+      : l.bgKind === 'gradient' ? `linear-gradient(135deg, ${c1}, ${c2})` // taste-skill-ignore: opt-in user wallpaper preset
       : l.bgKind === 'photo' && DATA_IMG.test(l.bgImage) ? `center / cover no-repeat url("${l.bgImage}")`
       : '';
+  });
+
+  // Links and folders under this workspace's root, counted once for the scope line.
+  const counts = $derived.by(() => {
+    let links = 0;
+    let folders = 0;
+    const walk = (n: BNode) => {
+      for (const c of n.children ?? []) {
+        if (c.url) links++;
+        else { folders++; walk(c); }
+      }
+    };
+    walk(wsRoot());
+    return { links, folders };
   });
 
   // --- commands (keys on the board, and run from the Tabkit palette) ---
@@ -79,9 +99,32 @@
 
   function onKey(e: KeyboardEvent) {
     if (e.metaKey || e.ctrlKey || e.altKey || (e.target instanceof Element && e.target.closest('input, textarea, select, dialog'))) return;
-    if (e.key === 'Escape' && ui.selecting) return toggleSelect();
+    if (e.key === 'Escape') {
+      if (ui.menuId) return closeItemMenu();
+      if (ui.selecting) return toggleSelect();
+      if (hasActiveFilter()) return clearFilters();
+    }
     const hit = COMMANDS.find((c) => c.key?.toLowerCase() === e.key.toLowerCase());
     if (hit) { e.preventDefault(); run(hit.id); }
+  }
+
+  function onMore(e: Event & { currentTarget: HTMLSelectElement }) {
+    const v = e.currentTarget.value;
+    e.currentTarget.value = '';
+    if (v) run(v);
+  }
+
+  function onQuickAdd(e: Event & { currentTarget: HTMLSelectElement }) {
+    const v = e.currentTarget.value;
+    e.currentTarget.value = '';
+    if (!v) return;
+    if (v === 'bookmark') createBookmark(ui.view ?? undefined);
+    else if (v === 'folder') createFolder(ui.view ?? undefined);
+    else if (v === 'note') newNote();
+    else if (v.startsWith('widget:')) {
+      ws().widgets.push({ id: crypto.randomUUID(), type: v.slice(7) });
+      saveWs();
+    }
   }
 
   onMount(() => {
@@ -114,6 +157,11 @@
     } else if (v === '__delete') deleteWorkspace();
     else switchWs(v);
   }
+
+  async function promptNewWs() {
+    const r = await form(t('New workspace'), [{ name: 'name', label: t('Name'), value: '', required: true }]);
+    if (r?.name) addWorkspace(r.name);
+  }
 </script>
 
 <svelte:window
@@ -124,42 +172,186 @@
 <div id="bg" aria-hidden="true" class:grain={l.grain && l.bgKind !== 'none'} style:background style:opacity={clamp(l.intensity, 0, 100) / 100}
   style:transform={parallax ? shift : null}></div>
 <header class="top">
-  <button class="searchbox" onclick={openTabkit} title={t('Search & command palette')}>
-    <span class="muted">{t('Search and commands (F)')}</span>
+  <button class="brand" onclick={() => open(null)} aria-label="Markboard" title={t('Board')}>
+    <Mark size={19} />
+    <span class="brand-name">Markboard</span>
   </button>
-  <select id="ws" aria-label={t('Workspace')} value={app.ws} onchange={onWorkspace}>
-    {#each Object.entries(app.workspaces) as [id, w] (id)}<option value={id}>{w.name}</option>{/each}
-    <option value="__new">{t('+ New workspace…')}</option>
-    <option value="__rename">{t('Rename workspace…')}</option>
-    {#if Object.keys(app.workspaces).length > 1}<option value="__delete">{t('Delete this workspace')}</option>{/if}
-  </select>
-  {#if gallery}
-    <span id="gallery-tools">
+  <span class="top-sep" aria-hidden="true"></span>
+  <div class="scope">
+    {#if gallery}<span class="scope-name">{ws().name}</span>{:else}<h1 class="scope-name">{ws().name}</h1>{/if}
+    <span class="scope-meta">{t('{0} links · {1} folders', counts.links, counts.folders)}</span>
+    <span class="scope-chev"><Glyph name="chevron" size={12} /></span>
+    <select id="ws" aria-label={t('Workspace')} value={app.ws} onchange={onWorkspace}>
+      {#each Object.entries(app.workspaces) as [id, w] (id)}<option value={id}>{w.name}</option>{/each}
+      <option value="__new">{t('+ New workspace…')}</option>
+      <option value="__rename">{t('Rename workspace…')}</option>
+      {#if Object.keys(app.workspaces).length > 1}<option value="__delete">{t('Delete this workspace')}</option>{/if}
+    </select>
+  </div>
+
+  <div class="top-filters" role="toolbar" aria-label={t('Board')}>
+    <button
+      type="button"
+      class="tool-icon"
+      class:on={ui.filterFav}
+      aria-pressed={ui.filterFav}
+      title={t('Favorites')}
+      aria-label={t('Favorites')}
+      onclick={() => (ui.filterFav = !ui.filterFav)}
+    >
+      <Glyph name={ui.filterFav ? 'star-fill' : 'star'} size={15} />
+    </button>
+    <button
+      type="button"
+      class="tool-icon"
+      class:on={app.showHidden}
+      aria-pressed={app.showHidden}
+      title={t('Show hidden items')}
+      aria-label={t('Show hidden items')}
+      onclick={() => { app.showHidden = !app.showHidden; save('showHidden'); }}
+    >
+      <Glyph name={app.showHidden ? 'eye' : 'eye-off'} size={15} />
+    </button>
+    <div class="menu-select tool-icon" class:on={!!ui.filterColor} title={t('Color label')}>
+      {#if ui.filterColor}
+        <span class="color-dot dot-{ui.filterColor}"></span>
+      {:else}
+        <Glyph name="swatch" size={15} />
+      {/if}
+      <select aria-label={t('Color label')} bind:value={ui.filterColor}>
+        <option value="">{t('Color label')}: {t('None')}</option>
+        {#each COLORS.filter(Boolean) as c (c)}
+          <option value={c}>{c}</option>
+        {/each}
+      </select>
+    </div>
+    {#if tags.length}
+      <div class="menu-select tool-icon" class:on={!!ui.filterTag} title={t('Tags')}>
+        <Glyph name="tag" size={15} />
+        <select aria-label={t('Tags')} bind:value={ui.filterTag}>
+          <option value="">{t('Tags')}: {t('None')}</option>
+          {#each tags as x (x)}
+            <option value={x}>#{x}</option>
+          {/each}
+        </select>
+      </div>
+    {/if}
+    <div class="menu-select tool-icon" title={t('New bookmark')}>
+      <Glyph name="plus" size={15} />
+      <select aria-label={t('New bookmark')} onchange={onQuickAdd}>
+        <option value="">+ {t('New bookmark')}</option>
+        <option value="bookmark">{t('New bookmark')}</option>
+        <option value="folder">{t('New folder')}</option>
+        <option value="note">{t('New note')}</option>
+        {#each Object.entries(WIDGETS) as [k, d] (k)}
+          <option value={'widget:' + k}>{t('+ Add widget')}: {t(d.label)}</option>
+        {/each}
+      </select>
+    </div>
+  </div>
+
+  <button class="search" onclick={openTabkit} aria-label={t('Search and commands (F)')} title={t('Search and commands (F)')}>
+    <Glyph name="search" size={15} />
+    <span class="search-label">{t('Search or run a command')}</span>
+    <kbd>F</kbd>
+  </button>
+
+  <div class="top-actions">
+    <div class="sort-pill" title={t('Sort')}>
+      <Glyph name="sort" size={13} />
       <select aria-label={t('Sort')} bind:value={ui.sort}>
         <option value="manual">{t('Manual')}</option>
         <option value="name">{t('Name')}</option>
         <option value="date">{t('Date added')}</option>
       </select>
-      <select aria-label={t('Gallery layout')} bind:value={app.galleryMode} onchange={() => save('galleryMode')}>
-        <option value="compact">{t('Grid')}</option>
-        <option value="extended">{t('Extended')}</option>
-        <option value="list">{t('List')}</option>
-      </select>
-      <button class="btn" onclick={bulkRename}>{t('Bulk rename')}</button>
-    </span>
-  {/if}
-  <button class="btn" title={t('New note (N)')} onclick={newNote}>{t('+ Note')}</button>
-  <button class="btn" title={t('Selection mode (S)')} onclick={toggleSelect}>{t('Select')}</button>
-  <button class="btn" onclick={saveTabs}>{t('Save tabs')}</button>
-  <button class="btn" onclick={saveSession}>{t('Save session')}</button>
-  <button class="btn" aria-label={t('Trash')} title={t('Trash')} onclick={showTrash}>🗑</button>
-  <button class="btn" aria-label={t('Cycle theme (T)')} title={t('Cycle theme (T)')} onclick={cycleTheme}>◐</button>
-  <button class="btn" aria-label={t('Settings')} title={t('Settings')} onclick={settings}>⚙</button>
-  <button class="btn" aria-label={t('Keyboard shortcuts (?)')} title={t('Keyboard shortcuts (?)')} onclick={() => run('help')}>?</button>
+    </div>
+    <button
+      type="button"
+      class="tool-icon"
+      class:on={l.compact}
+      title={t('Switch view density / gallery layout')}
+      aria-label={t('Switch view density / gallery layout')}
+      onclick={cycleView}
+    >
+      <Glyph name="list" size={15} />
+    </button>
+    <button
+      type="button"
+      class="tool-icon"
+      class:on={gallery}
+      title={gallery ? t('Back to board') : t('Open gallery')}
+      aria-label={gallery ? t('Back to board') : t('Open gallery')}
+      onclick={() => open(gallery ? null : firstFolderId)}
+    >
+      <Glyph name="grid" size={15} />
+    </button>
+    <button
+      type="button"
+      class="tool-icon"
+      title={t('Settings')}
+      aria-label={t('Settings')}
+      onclick={settings}
+    >
+      <Glyph name="settings" size={15} />
+    </button>
+  </div>
 </header>
-<Pins />
-<main id="main" class={gallery ? 'gallery-view' : 'board'}>
+
+<main id="main" class:board={!gallery} class:gallery-view={gallery}>
   {#if gallery}<Gallery id={ui.view!} />{:else}<Board />{/if}
 </main>
+
+<footer class="dock">
+  <div class="dock-ws" role="tablist" aria-label={t('Workspace')}>
+    {#each Object.entries(app.workspaces) as [id, w] (id)}
+      <button
+        type="button"
+        role="tab"
+        class="dock-ws-btn"
+        class:on={id === app.ws}
+        aria-selected={id === app.ws}
+        onclick={() => switchWs(id)}
+      >
+        <span class="dock-ws-dot"></span>
+        <span>{w.name}</span>
+      </button>
+    {/each}
+    <button type="button" class="dock-ws-add" title={t('+ New workspace…')} aria-label={t('+ New workspace…')} onclick={promptNewWs}>
+      <Glyph name="plus" size={13} />
+    </button>
+  </div>
+
+  <Pins />
+
+  <div class="dock-tools">
+    <button type="button" class="dock-tool" title={t('New note (N)')} aria-label={t('New note')} onclick={newNote}>
+      <Glyph name="note" size={14} /><span class="dock-label">{t('New note')}</span>
+    </button>
+    <button type="button" class="dock-tool" title={t('Save tabs')} aria-label={t('Save tabs')} onclick={saveTabs}>
+      <Glyph name="tabs" size={14} /><span class="dock-label">{t('Save tabs')}</span>
+    </button>
+    <button type="button" class="dock-tool" title={t('Trash')} aria-label={t('Trash')} onclick={showTrash}>
+      <Glyph name="trash" size={14} />
+    </button>
+    <div class="menu-select dock-tool" title={t('More')}>
+      <Glyph name="more" size={15} />
+      <select aria-label={t('More')} onchange={onMore}>
+        <option value="">{t('More')}</option>
+        <option value="select">{t('Select')}</option>
+        <option value="note">{t('New note')}</option>
+        <option value="save-session">{t('Save session')}</option>
+        <option value="duplicates">{t('Find duplicates')}</option>
+        <option value="trash">{t('Trash')}</option>
+        <option value="export">{t('Export')}</option>
+        <option value="backup">{t('Back up now')}</option>
+        <option value="help">{t('Keyboard shortcuts')}</option>
+        <option value="settings">{t('Settings')}</option>
+        <option value="theme">{t('Cycle theme (T)')}</option>
+      </select>
+    </div>
+  </div>
+</footer>
+
 {#if ui.selecting}<Selbar />{/if}
+<ItemMenu />
 <Dialogs />

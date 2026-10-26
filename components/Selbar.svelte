@@ -21,8 +21,8 @@
 
 <div id="selbar">
   <span class="grow">{t('Selected: {0}', nodes.length)}</span>
-  <button type="button" class="btn" onclick={needs(() => bulkMeta(nodes, { fav: !nodes.every((n) => app.meta[n.id]?.fav) }))}>{t('★ Favorite')}</button>
-  <button type="button" class="btn" onclick={needs(color)}>{t('● Color')}</button>
+  <button type="button" class="btn" onclick={needs(() => bulkMeta(nodes, { fav: !nodes.every((n) => app.meta[n.id]?.fav) }))}>{t('Favorite')}</button>
+  <button type="button" class="btn" onclick={needs(color)}>{t('Color label')}</button>
   <button type="button" class="btn" onclick={needs(move)}>{t('Move…')}</button>
   <button type="button" class="btn" onclick={needs(copy)}>{t('Copy links')}</button>
   <button type="button" class="btn" onclick={needs(() => { removeMany(nodes.map((n) => n.id)); toggleSelect(); })}>{t('Delete')}</button>

@@ -6,10 +6,10 @@ import { initLang, locale, t } from './i18n.ts';
 import type { BNode, Data, Look, Meta, Row, TrashEntry, Workspace } from './types.ts';
 import { WIDGETS } from './widgets.ts';
 
-export const COLORS = ['', 'red', 'orange', 'green', 'blue', 'purple'];
+export const COLORS = ['', 'red', 'orange', 'amber', 'green', 'teal', 'blue', 'purple', 'pink'];
 export const THEMES = ['system', 'light', 'dark', 'black'];
-export const ACCENTS = ['#4f46e5', '#0090ff', '#30a46c', '#f76b15', '#e5484d'];
-export const FONTS: Record<string, string> = { system: 'system-ui, sans-serif', serif: 'Georgia, serif', mono: 'ui-monospace, Menlo, monospace', rounded: 'ui-rounded, system-ui, sans-serif' };
+export const ACCENTS = ['#1d5fbf', '#0f766e', '#2f7d4f', '#b45309', '#b42318'];
+export const FONTS: Record<string, string> = { system: '"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif', serif: 'Georgia, serif', mono: 'ui-monospace, Menlo, monospace', rounded: 'ui-rounded, system-ui, sans-serif' }; // taste-skill-ignore: user typeface choice
 export const FONT_NAMES: Record<string, string> = { system: 'Sans', serif: 'Serif', mono: 'Mono', rounded: 'Rounded' };
 export const PRESET_NAMES: Record<string, string> = { dusk: 'Dusk', ocean: 'Ocean', forest: 'Forest', ember: 'Ember', carbon: 'Carbon' };
 export const PRESETS: Record<string, [string, string]> = { dusk: ['#1e1b4b', '#be185d'], ocean: ['#0c4a6e', '#14b8a6'], forest: ['#052e16', '#65a30d'], ember: ['#0c0a09', '#9f1239'], carbon: ['#09090b', '#3f3f46'] };
@@ -32,7 +32,18 @@ class Bookmarks {
 export const data = new Bookmarks();
 
 /** Per-tab UI state. `view` is the folder id shown as a gallery (the URL hash). */
-export const ui = $state({ view: location.hash.slice(1) || null, sort: 'manual', selecting: false, selected: new SvelteSet<string>() });
+export const ui = $state({
+  view: location.hash.slice(1) || null,
+  sort: 'manual' as 'manual' | 'name' | 'date',
+  selecting: false,
+  selected: new SvelteSet<string>(),
+  filterFav: false,
+  filterColor: '',
+  filterTag: '',
+  menuId: null as string | null,
+  menuRect: null as { top: number; left: number; right: number; bottom: number } | null,
+  aside: true,
+});
 
 export const save = (...keys: (keyof Data)[]) =>
   browser.storage.local.set(Object.fromEntries(keys.map((k) => [k, $state.snapshot(app[k])])));
@@ -42,6 +53,47 @@ export const ws = (): Workspace => app.workspaces[app.ws]!;
 export const look = (): Look => ({ ...LOOK_DEFAULTS, ...ws().look });
 export const wsRoot = () => data.byId.get(ws().root ?? '') ?? data.bar;
 export const metaOf = (n: Row): Meta => (n.id && app.meta[n.id]) || {};
+
+export const hasActiveFilter = () => ui.filterFav || !!ui.filterColor || !!ui.filterTag;
+export function clearFilters() {
+  ui.filterFav = false;
+  ui.filterColor = '';
+  ui.filterTag = '';
+}
+
+export function matchesFilter(n: Row): boolean {
+  const m = metaOf(n);
+  if (m.hidden && !app.showHidden) return false;
+  if (ui.filterFav && !m.fav) return false;
+  if (ui.filterColor && m.color !== ui.filterColor) return false;
+  if (ui.filterTag && !m.tags?.includes(ui.filterTag)) return false;
+  return true;
+}
+
+export function sortRows<T extends Row>(rows: T[]): T[] {
+  const out = [...rows];
+  if (ui.sort === 'name') out.sort((a, b) => (a.title || '').localeCompare(b.title || '', locale));
+  else if (ui.sort === 'date') out.sort((a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0));
+  return out;
+}
+
+export function allTags(): string[] {
+  const found = new Set<string>();
+  for (const n of data.flat) for (const tag of metaOf(n).tags ?? []) found.add(tag);
+  return [...found].sort((a, b) => a.localeCompare(b, locale));
+}
+
+export function openItemMenu(id: string, anchor: Element) {
+  if (ui.menuId === id) { closeItemMenu(); return; }
+  const r = anchor.getBoundingClientRect();
+  ui.menuId = id;
+  ui.menuRect = { top: r.top, left: r.left, right: r.right, bottom: r.bottom };
+}
+
+export function closeItemMenu() {
+  ui.menuId = null;
+  ui.menuRect = null;
+}
 
 /** Fills what old or imported workspaces lack; the current one must exist. Not during render: it writes state. */
 function normalize() {
@@ -53,25 +105,8 @@ function normalize() {
 export async function init() {
   const stored = await browser.storage.local.get(null);
   initLang(stored.lang as string | undefined);
-  // Older versions kept the look globally and notes as one string.
-  const ws0 = Object.values((stored.workspaces ?? {}) as Record<string, Partial<Workspace>>);
-  for (const k of ['theme', 'accent', 'font', 'bg'] as const) {
-    if (!(k in stored)) continue;
-    for (const w of ws0) {
-      w.look ??= {};
-      if (k === 'bg') { if (stored.bg) Object.assign(w.look, { bgImage: stored.bg, bgKind: 'photo' }); } else (w.look as Record<string, unknown>)[k] ??= stored[k];
-    }
-    delete stored[k];
-    browser.storage.local.remove(k);
-  }
-  const oldNotes = typeof stored.notes === 'string' ? stored.notes : null;
-  delete stored.notes;
   Object.assign(app, stored);
   normalize();
-  if (oldNotes !== null) {
-    ws().notes.unshift({ id: crypto.randomUUID(), title: t('Notes'), text: oldNotes, checklist: [] });
-    browser.storage.local.remove('notes');
-  }
   app.trash = app.trash.filter((x) => Date.now() - x.at < TRASH_DAYS * 864e5);
   save('trash', 'workspaces', 'ws');
 }
@@ -96,6 +131,57 @@ export function setMeta(id: string, patch: Meta) {
   save('meta');
 }
 
+export function setRemind(id: string, remind: string) {
+  const alarm = `remind:${id}`;
+  if (remind) browser.alarms.create(alarm, { when: new Date(remind).getTime() });
+  else browser.alarms.clear(alarm);
+  setMeta(id, { remind });
+}
+
+export async function moveStep(id: string, dir: 'up' | 'down' | 'left' | 'right') {
+  const n = data.byId.get(id);
+  if (!n || !n.parentId) return;
+  if (dir === 'up' || dir === 'down') {
+    const siblings = data.byId.get(n.parentId)?.children ?? [];
+    const idx = siblings.findIndex((c) => c.id === id);
+    if (idx < 0) return;
+    const next = dir === 'up' ? Math.max(0, idx - 1) : Math.min(siblings.length, idx + 2);
+    await browser.bookmarks.move(id, { parentId: n.parentId, index: next }).catch((e) => toast(e.message));
+    await refresh();
+  } else {
+    const r = wsRoot();
+    const folders = [r, ...(r.children ?? []).filter((c) => !c.url)];
+    const curIdx = folders.findIndex((f) => f.id === n.parentId);
+    if (curIdx < 0) return;
+    const target = folders[(curIdx + (dir === 'left' ? -1 : 1) + folders.length) % folders.length];
+    if (target && target.id !== n.parentId) {
+      await browser.bookmarks.move(id, { parentId: target.id }).catch((e) => toast(e.message));
+      await refresh();
+    }
+  }
+}
+
+export async function createBookmark(parentId?: string) {
+  const v = await form(t('New bookmark'), [
+    { name: 'title', label: t('Title'), required: true },
+    { name: 'url', label: t('URL'), type: 'url', value: 'https://', required: true },
+    { name: 'folder', label: t('Folder'), type: 'select', value: parentId ?? wsRoot().id, options: folderOptions() },
+  ]);
+  if (!v) return;
+  await browser.bookmarks.create({ parentId: v.folder, title: v.title, url: v.url }).catch((e) => toast(e.message));
+  await refresh();
+}
+
+export async function createFolder(parentId?: string) {
+  const v = await form(t('New folder'), [
+    { name: 'title', label: t('Name'), required: true },
+    { name: 'folder', label: t('Folder'), type: 'select', value: parentId ?? wsRoot().id, options: folderOptions() },
+  ]);
+  if (!v) return;
+  await browser.bookmarks.create({ parentId: v.folder, title: v.title }).catch((e) => toast(e.message));
+  await refresh();
+}
+
 export async function edit(n: BNode) {
   const m = app.meta[n.id] ?? {};
   const v = await form(n.url ? t('Edit bookmark') : t('Edit folder'), [
@@ -116,9 +202,7 @@ export async function edit(n: BNode) {
   } catch (e) {
     return toast((e as Error).message);
   }
-  const alarm = `remind:${n.id}`;
-  if (v.remind) browser.alarms.create(alarm, { when: new Date(v.remind).getTime() });
-  else browser.alarms.clear(alarm);
+  setRemind(n.id, v.remind);
   setMeta(n.id, {
     tags: v.tags.split(',').map((tag: string) => tag.trim().replace(/^#/, '')).filter(Boolean),
     comment: v.comment, icon: v.icon, remind: v.remind, pinned: v.pinned, hidden: v.hidden,

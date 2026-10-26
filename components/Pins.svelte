@@ -6,7 +6,12 @@
 </script>
 
 {#if pins.length}
-  <nav id="pins">
-    {#each pins as n (n.id)}<a class="pin" href={n.url} title={n.url}><Icon {n} /><span class="title">{n.title}</span></a>{/each}
+  <nav id="pins" aria-label="Pinned">
+    {#each pins as n (n.id)}
+      <a class="pin" href={n.url} title={n.url}>
+        <Icon {n} />
+        <span class="title">{n.title}</span>
+      </a>
+    {/each}
   </nav>
 {/if}

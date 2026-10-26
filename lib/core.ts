@@ -29,7 +29,7 @@ export function search<T extends { title: string; url?: string; keywords?: strin
 // Look is per workspace.
 export const LOOK_DEFAULTS: Look = {
   theme: 'system', accent: '', font: 'system', compact: false, columns: 0, panelOpacity: 100,
-  bgKind: 'none', bgPreset: 'custom', bgColor: '#1e293b', bgColor2: '#7c3aed', bgImage: '', intensity: 100, grain: false, parallax: false,
+  bgKind: 'none', bgPreset: 'custom', bgColor: '#1e293b', bgColor2: '#0f766e', bgImage: '', intensity: 100, grain: false, parallax: false,
 };
 
 export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace => ({
@@ -37,7 +37,7 @@ export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace 
 });
 
 export const DEFAULTS: Data = {
-  meta: {}, showHidden: false, galleryMode: 'compact',
+  meta: {}, showHidden: false, galleryMode: 'extended',
   workspaces: { default: { ...newWorkspace('Personal'), widgets: [{ id: 'clock', type: 'clock' }] } }, ws: 'default',
   sessions: [], trash: [], autoBackup: false, backupToDownloads: false, backups: [], lang: 'auto',
 };
@@ -70,7 +70,7 @@ export function sanitize(d: unknown): Partial<Data> {
   return out as Partial<Data>;
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
+const pad = (n: number) => String(n).padStart(2, '0'); // taste-skill-ignore: clock/timer digits
 export function fmt(ms: number) {
   const s = Math.max(0, Math.round(ms / 1000));
   const d = Math.floor(s / 86400), hh = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);

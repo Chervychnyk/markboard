@@ -2,29 +2,23 @@
   import type { Snippet } from 'svelte';
   import { form, type Extra } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { deleteNote, dropBookmark, HEX, look, openAll, saveWs, ws } from '@/lib/store.svelte';
+  import { createBookmark, deleteNote, dropBookmark, HEX, openAll, saveWs, ws } from '@/lib/store.svelte';
+  import Glyph, { type GlyphName } from './Glyph.svelte';
 
-  let { k, title, folderId, children }: { k: string; title: string; folderId?: string; children: Snippet } = $props();
+  let {
+    k, title, folderId, count, icon, children,
+  }: {
+    k: string; title: string; folderId?: string; count?: number; icon?: GlyphName; children: Snippet;
+  } = $props();
   let el = $state<HTMLElement>();
-  const fixed = $derived(!!look().columns);
+  let over = $state(false);
 
-  // Remember the width the user drags the column to (unless a fixed column count is set).
-  $effect(() => {
-    if (fixed || !el) return;
-    const ro = new ResizeObserver(() => {
-      const px = Math.round(el!.offsetWidth);
-      if (ws().widths[k] !== px) { ws().widths[k] = px; saveWs(); }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  });
-
-  const width = $derived(!fixed && ws().widths[k]);
   const color = $derived(HEX.test(ws().colColors[k] ?? '') ? ws().colColors[k] : null);
   const name = $derived(ws().colNames[k] || title);
 
   function drop(e: DragEvent) {
     e.preventDefault();
+    over = false;
     const moving = e.dataTransfer!.getData('text/column');
     if (!moving) return folderId && dropBookmark(e, folderId);
     if (moving === k) return;
@@ -34,15 +28,23 @@
     saveWs();
   }
 
+  function dragLeave(e: DragEvent) {
+    if (!el?.contains(e.relatedTarget as Node | null)) over = false;
+  }
+
   async function menu() {
     const w = ws();
     const noteId = k.startsWith('note:') && k.slice(5);
     const extra: Extra[] = [];
-    if (folderId) extra.push([t('Open all links'), () => openAll(folderId)]);
+    if (folderId) {
+      extra.push([t('New bookmark'), () => createBookmark(folderId)]);
+      extra.push([t('Open all links'), () => openAll(folderId)]);
+    }
     if (noteId) extra.push([t('Delete note'), () => deleteNote(noteId)]);
+    extra.push([t('Hide column in this workspace'), () => { w.hiddenCols.push(k); saveWs(); }]);
     const v = await form(t('Column'), [
       { name: 'name', label: t('Name'), value: w.colNames[k] || title },
-      { name: 'color', label: t('Color'), type: 'color', value: w.colColors[k] || '#4f46e5' },
+      { name: 'color', label: t('Color'), type: 'color', value: w.colColors[k] || '#1d5fbf' },
       { name: 'noColor', label: t('No color'), type: 'checkbox', value: !w.colColors[k] },
     ], extra);
     if (!v) return;
@@ -55,18 +57,33 @@
 <section
   bind:this={el}
   class="col"
+  class:over
   data-key={k}
-  style:width={width ? `${width}px` : null}
-  style:border-top={color ? `3px solid ${color}` : null}
-  ondragover={(e) => e.preventDefault()}
+  style:--col-color={color ?? 'transparent'}
+  ondragover={(e) => { e.preventDefault(); over = true; }}
+  ondragleave={dragLeave}
   ondrop={drop}
   role="list"
 >
-  <!-- svelte-ignore a11y_no_static_element_interactions (dragging is a pointer-only extra; the ⋯ menu and keys cover the rest) -->
-  <header draggable="true" title={t('Drag to reorder')} ondragstart={(e) => e.dataTransfer!.setData('text/column', k)}>
-    {#if folderId}<a class="grow" href={'#' + folderId}>{name}</a>{:else}<span class="grow">{name}</span>{/if}
-    <button class="hide" title={t('Column options')} onclick={menu}>⋯</button>
-    <button class="hide" title={t('Hide column in this workspace')} onclick={() => { ws().hiddenCols.push(k); saveWs(); }}>×</button>
+  <!-- svelte-ignore a11y_no_static_element_interactions (dragging is a pointer-only extra; the menu and keys cover the rest) -->
+  <header class="col-head" draggable="true" title={t('Drag to reorder')} ondragstart={(e) => e.dataTransfer!.setData('text/column', k)}>
+    {#if color}
+      <span class="col-dot" style:background={color} aria-hidden="true"></span>
+    {:else if icon}
+      <span class="col-ico" aria-hidden="true"><Glyph name={icon} size={14} /></span>
+    {/if}
+    {#if folderId}<a class="col-name" href={'#' + folderId} title={t('Open gallery')}>{name}</a>{:else}<span class="col-name">{name}</span>{/if}
+    {#if count !== undefined}<span class="col-count">{count}</span>{/if}
+    <div class="col-actions">
+      {#if folderId}
+        <button class="col-kebab" title={t('New bookmark')} aria-label={t('New bookmark')} onclick={() => createBookmark(folderId)}>
+          <Glyph name="plus" size={14} />
+        </button>
+      {/if}
+      <button class="col-kebab" title={t('Column options')} aria-label={t('Column options')} onclick={menu}>
+        <Glyph name="more" size={15} />
+      </button>
+    </div>
   </header>
-  <div class="list">{@render children()}</div>
+  <div class="col-list">{@render children()}</div>
 </section>

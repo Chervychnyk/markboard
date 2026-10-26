@@ -9,5 +9,5 @@
 {#if DATA_IMG.test((w.image as string) ?? '')}
   <img class="photo" src={w.image as string} alt={w.label ?? ''} />
 {:else}
-  <div class="muted">{t('Pick a photo ⚙')}</div>
+  <div class="muted">{t('Pick a photo')}</div>
 {/if}

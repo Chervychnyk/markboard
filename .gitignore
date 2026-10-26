@@ -2,3 +2,7 @@ node_modules
 .output
 .wxt
 .claude/settings.local.json
+.taste-skill/preview-dist
+.taste-skill/inspect
+.taste-skill/before
+.taste-skill/after

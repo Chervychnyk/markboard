@@ -26,8 +26,10 @@
   const reset = () => { Object.assign(w, { mode: 'work', endsAt: null, left: null }); save(); };
 </script>
 
-<div class="big">{w.mode === 'break' ? t('Break') : t('Focus')} {fmt(w.endsAt ? (w.endsAt as number) - tick.now : ((w.left as number) ?? dur()))}</div>
-<div class="row">
-  <button class="btn" onclick={toggle}>{w.endsAt ? t('Pause') : t('Start')}</button>
-  <button class="btn" onclick={reset}>{t('Reset')}</button>
+<div class="w-split">
+  <div class="big">{fmt(w.endsAt ? (w.endsAt as number) - tick.now : ((w.left as number) ?? dur()))}</div>
+  <div class="row">
+    <button class="btn" onclick={toggle}>{w.endsAt ? t('Pause') : t('Start')}</button>
+    <button class="btn" onclick={reset}>{t('Reset')}</button>
+  </div>
 </div>

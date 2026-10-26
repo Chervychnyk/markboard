@@ -9,16 +9,18 @@
     const now = new Date(tick.now);
     try {
       const tz = w.tz ? { timeZone: w.tz as string } : {};
-      const hour12 = w.hours ? w.hours === '12' : undefined;
+      const hour12 = w.hours ? w.hours === '12' : false;
       return [
         now.toLocaleTimeString(locale, { ...tz, hour12, hour: '2-digit', minute: '2-digit' }),
-        now.toLocaleDateString(locale, { ...tz, weekday: 'long', day: 'numeric', month: 'long' }) + (w.tz ? ` · ${w.tz}` : ''),
+        now.toLocaleDateString(locale, { ...tz, weekday: 'short', month: 'short', day: 'numeric' }),
       ];
     } catch {
-      return ['--:--', String(w.tz ?? t('Local time'))]; // invalid imported time zone
+      return ['--:--', String(w.tz ?? t('Local time'))];
     }
   });
 </script>
 
-<div class="big">{shown[0]}</div>
-<div class="muted">{shown[1]}</div>
+<div class="w-split">
+  <div class="big">{shown[0]}</div>
+  <div class="muted">{shown[1]}</div>
+</div>
