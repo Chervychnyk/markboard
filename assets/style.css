@@ -494,6 +494,10 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
   font-size: 14px; line-height: 1;
   object-fit: contain; border-radius: 3px;
 }
+/* Dark themes: dark logos on a transparent ground get a light tile, near-black squares a faint ring (see Icon.svelte). */
+:root:is([data-theme="dark"], [data-theme="black"]) img.ico.tiled { padding: 2px; background: #e6e9ed; border-radius: 4px; }
+:root:is([data-theme="dark"], [data-theme="black"]) .gallery img.ico.tiled { padding: 7px; background: #e6e9ed; }
+:root:is([data-theme="dark"], [data-theme="black"]) img.ico.ringed { box-shadow: 0 0 0 1px rgb(255 255 255 / 0.16); }
 .body { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
 .title-line { display: flex; align-items: center; gap: 5px; min-width: 0; }
 .folder-inline-ico { display: none; color: var(--muted); flex: none; }
