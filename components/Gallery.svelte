@@ -61,34 +61,33 @@
 
 <header class="gallery-head">
   <div class="gallery-title-block">
-    <div class="gallery-crumb-row">
-      <nav class="crumbs" aria-label={t('Board')}>
-        <button class="crumb-btn" onclick={() => open(null)}>
-          <Glyph name="folder" size={14} />
-          <span>{t('Board')}</span>
-        </button>
-        {#each crumbs.slice(0, -1) as c (c.id)}
-          <span class="crumb-sep" aria-hidden="true">›</span>
-          <a class="crumb-link" href={'#' + c.id}>{c.title}</a>
-        {/each}
+    <nav class="crumbs" aria-label={t('Board')}>
+      <button class="crumb-btn" onclick={() => open(null)}>
+        <Glyph name="chevron-left" size={13} />
+        <span>{t('Board')}</span>
+      </button>
+      {#each crumbs.slice(0, -1) as c (c.id)}
         <span class="crumb-sep" aria-hidden="true">›</span>
-      </nav>
+        <a class="crumb-link" href={'#' + c.id}>{c.title}</a>
+      {/each}
+    </nav>
+    <div class="gallery-title-row">
       <h1 class="gallery-title">{folder.title}</h1>
       <span class="gallery-sub">{t('{0} bookmarks', kids.length)}</span>
-      {#if tags.length}
-        <div class="tag-filter" role="group" aria-label={t('Tags')}>
-          {#each tags as x (x)}
-            <button
-              class="tag-chip"
-              class:on={tag === x}
-              aria-pressed={tag === x}
-              title={t('Filter by #{0}', x)}
-              onclick={() => (tag = tag === x ? undefined : x)}
-            >#{x}</button>
-          {/each}
-        </div>
-      {/if}
     </div>
+    {#if tags.length}
+      <div class="tag-filter" role="group" aria-label={t('Tags')}>
+        {#each tags as x (x)}
+          <button
+            class="tag-chip"
+            class:on={tag === x}
+            aria-pressed={tag === x}
+            title={t('Filter by #{0}', x)}
+            onclick={() => (tag = tag === x ? undefined : x)}
+          >#{x}</button>
+        {/each}
+      </div>
+    {/if}
   </div>
   <div class="gallery-tools">
     <label class="gallery-search">
