@@ -23,6 +23,7 @@
   import Mark from './Mark.svelte';
   import FilterMenu from './FilterMenu.svelte';
   import Pins from './Pins.svelte';
+  import Welcome from './Welcome.svelte';
   import Selbar from './Selbar.svelte';
   import Trash from './Trash.svelte';
 
@@ -131,6 +132,11 @@
   }
 
   onMount(() => {
+    if (!app.onboarded) {
+      app.onboarded = true; // once shown it counts, however it is closed
+      save('onboarded');
+      modal('', Welcome, { bare: true });
+    }
     browser.runtime.sendMessage({ type: 'register' }).catch(() => {});
     // A command picked in Tabkit while this tab was current; the background asks every board page, this tab's answers.
     let myTab: number | undefined;

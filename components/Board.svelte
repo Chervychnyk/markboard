@@ -180,7 +180,10 @@
             {#if links.length}
               {#each links as n (n.id ?? n.url)}<Item {n} />{/each}
             {:else if !subs.length}
-              <p class="col-empty">{t('No bookmarks yet')}</p>
+              <div class="col-empty">
+                <p>{t('No bookmarks yet')}</p>
+                <p class="col-empty-hint">{t('Add one with + or the ☆ in the address bar')}</p>
+              </div>
             {/if}
           {/if}
         </Column>

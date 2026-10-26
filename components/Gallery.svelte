@@ -131,7 +131,7 @@
         {#each kids as n (n.id)}<Item {n} />{/each}
       </div>
     {:else}
-      <p class="gallery-empty">{tag || q ? t('No results') : t('No bookmarks yet')}</p>
+      <p class="gallery-empty">{tag || q ? t('No results') : t('No bookmarks yet')}{#if !tag && !q}<span class="col-empty-hint">{t('Add one with + or the ☆ in the address bar')}</span>{/if}</p>
     {/if}
   </div>
   {#if ui.aside}<GalleryAside list={app.galleryMode === 'list'} current={id} />{/if}

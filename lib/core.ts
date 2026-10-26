@@ -39,7 +39,7 @@ export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace 
 export const DEFAULTS: Data = {
   meta: {}, showHidden: false, galleryMode: 'extended',
   workspaces: { default: { ...newWorkspace('Personal'), widgets: [{ id: 'clock', type: 'clock' }] } }, ws: 'default',
-  sessions: [], trash: [], autoBackup: false, backupToDownloads: false, backups: [], lang: 'auto', hiddenTools: [],
+  sessions: [], trash: [], autoBackup: false, backupToDownloads: false, backups: [], lang: 'auto', hiddenTools: [], onboarded: false,
 };
 
 /** Fills fields old or imported workspaces lack, and turns a v0.3 single-string note into a note list. */
@@ -52,7 +52,7 @@ export function normalizeWorkspace(w: Omit<Partial<Workspace>, 'notes'> & { note
 
 const TYPES: Record<keyof Omit<Data, 'backups'>, 'object' | 'array' | 'boolean' | 'string'> = {
   meta: 'object', showHidden: 'boolean', galleryMode: 'string', workspaces: 'object', ws: 'string',
-  sessions: 'array', trash: 'array', autoBackup: 'boolean', backupToDownloads: 'boolean', lang: 'string', hiddenTools: 'array',
+  sessions: 'array', trash: 'array', autoBackup: 'boolean', backupToDownloads: 'boolean', lang: 'string', hiddenTools: 'array', onboarded: 'boolean',
 };
 
 /** Validates an imported/restored backup at the trust boundary; throws on bad shape. */

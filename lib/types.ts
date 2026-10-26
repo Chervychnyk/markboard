@@ -74,4 +74,6 @@ export interface Data {
   lang: string;
   /** toolbar and dock items the user turned off in Settings → Toolbar & header */
   hiddenTools: string[];
+  /** the first-run welcome was shown */
+  onboarded: boolean;
 }
