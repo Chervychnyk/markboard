@@ -2,7 +2,7 @@
   import { clamp } from '@/lib/core';
   import { t } from '@/lib/i18n';
   import {
-    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, look, matchesFilter, sortRows, app, toggleCollapsed, ws, wsRoot,
+    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, look, matchesFilter, sortRows, app, toggleCollapsed, ui, ws, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode, Note, Row, Widget } from '@/lib/types';
   import Column from './Column.svelte';
@@ -49,6 +49,8 @@
         return visibleCount(c) > 0;
       });
   });
+
+  $effect(() => { ui.colOrder = cols.map((c) => c.k); });
 
   function subFoldersOf(c: Col): BNode[] {
     if (!c.folderId || !c.rows) return [];

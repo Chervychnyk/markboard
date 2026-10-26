@@ -47,6 +47,10 @@ export const ui = $state({
   focusSearch: false,
   /** where a dragged bookmark would land: before or after this row */
   dropHint: null as { id: string; after: boolean } | null,
+  /** the column whose ⋮ menu is open, and where its header sits */
+  /** the board's columns in layout order (Board keeps it current); the column menu moves within it */
+  colOrder: [] as string[],
+  colMenu: null as { k: string; title: string; folderId?: string; rect: { top: number; left: number; right: number; bottom: number } } | null,
 });
 
 export const save = (...keys: (keyof Data)[]) =>
@@ -110,6 +114,23 @@ export function openItemMenu(id: string, anchor: Element) {
 export function closeItemMenu() {
   ui.menuId = null;
   ui.menuRect = null;
+}
+
+export function openColMenu(k: string, title: string, folderId: string | undefined, header: Element) {
+  if (ui.colMenu?.k === k) { ui.colMenu = null; return; }
+  const r = header.getBoundingClientRect();
+  ui.colMenu = { k, title, folderId, rect: { top: r.top, left: r.left, right: r.right, bottom: r.bottom } };
+}
+
+/** Moves a column one step earlier or later in the board's layout order (lanes fill in that order). */
+export function moveColumn(k: string, dir: -1 | 1) {
+  // shortcut: while a filter hides columns, they drop out of this order and go last; merge with ws().order if that matters.
+  const keys = [...ui.colOrder];
+  const i = keys.indexOf(k), j = i + dir;
+  if (i < 0 || j < 0 || j >= keys.length) return;
+  [keys[i], keys[j]] = [keys[j]!, keys[i]!];
+  ws().order = keys;
+  saveWs();
 }
 
 /** The item menu's Hide and Delete, shared by its buttons and the H / Del keys. */

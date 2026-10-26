@@ -1,9 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { form, type Extra } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
   import {
-    createBookmark, deleteNote, dropBookmark, HEX, isCollapsed, open, openAll, saveWs, toggleCollapsed, ui, ws,
+    COLORS, createBookmark, dropBookmark, HEX, isCollapsed, open, openColMenu, saveWs, toggleCollapsed, ui, ws,
   } from '@/lib/store.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
 
@@ -15,7 +14,9 @@
   let el = $state<HTMLElement>();
   let over = $state(false);
 
-  const color = $derived(HEX.test(ws().colColors[k] ?? '') ? ws().colColors[k] : null);
+  // A column color is a label name (follows the theme) or a custom hex.
+  const raw = $derived(ws().colColors[k] ?? '');
+  const color = $derived(raw && COLORS.includes(raw) ? `var(--label-${raw})` : HEX.test(raw) ? raw : null);
   const name = $derived(ws().colNames[k] || title);
   const folded = $derived(isCollapsed(k));
 
@@ -35,26 +36,6 @@
     if (!el?.contains(e.relatedTarget as Node | null)) over = false;
   }
 
-  async function menu() {
-    const w = ws();
-    const noteId = k.startsWith('note:') && k.slice(5);
-    const extra: Extra[] = [];
-    if (folderId) {
-      extra.push([t('New bookmark'), () => createBookmark(folderId)]);
-      extra.push([t('Open all links'), () => openAll(folderId)]);
-    }
-    if (noteId) extra.push([t('Delete note'), () => deleteNote(noteId)]);
-    extra.push([t('Hide column in this workspace'), () => { w.hiddenCols.push(k); saveWs(); }]);
-    const v = await form(t('Column'), [
-      { name: 'name', label: t('Name'), value: w.colNames[k] || title },
-      { name: 'color', label: t('Color'), type: 'color', value: w.colColors[k] || '#1d5fbf' },
-      { name: 'noColor', label: t('No color'), type: 'checkbox', value: !w.colColors[k] },
-    ], extra);
-    if (!v) return;
-    if (v.name && v.name !== title) w.colNames[k] = v.name; else delete w.colNames[k];
-    if (v.noColor) delete w.colColors[k]; else w.colColors[k] = v.color;
-    saveWs();
-  }
 </script>
 
 <section
@@ -62,6 +43,7 @@
   class="col"
   class:over
   class:folded
+  class:menu-open={ui.colMenu?.k === k}
   data-key={k}
   style:--col-color={color ?? 'transparent'}
   ondragover={(e) => { e.preventDefault(); over = true; }}
@@ -87,7 +69,7 @@
           <Glyph name="plus" size={14} />
         </button>
       {/if}
-      <button class="col-kebab" title={t('Column options')} aria-label={t('Column options')} onclick={menu}>
+      <button class="col-kebab" title={t('Column options')} aria-label={t('Column options')} onclick={(e) => openColMenu(k, title, folderId, e.currentTarget.closest('.col-head')!)}>
         <Glyph name="more" size={15} />
       </button>
       <button class="col-kebab col-fold" aria-expanded={!folded} title={folded ? t('Expand') : t('Collapse')} aria-label={folded ? t('Expand') : t('Collapse')} onclick={() => toggleCollapsed(k)}>

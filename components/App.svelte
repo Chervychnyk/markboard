@@ -19,6 +19,7 @@
   import Gallery from './Gallery.svelte';
   import Glyph from './Glyph.svelte';
   import Help from './Help.svelte';
+  import ColumnMenu from './ColumnMenu.svelte';
   import ItemMenu from './ItemMenu.svelte';
   import Mark from './Mark.svelte';
   import FilterMenu from './FilterMenu.svelte';
@@ -356,4 +357,5 @@
 
 {#if ui.selecting}<Selbar />{/if}
 <ItemMenu />
+<ColumnMenu />
 <Dialogs />
