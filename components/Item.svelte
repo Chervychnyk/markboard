@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '@/lib/i18n';
-  import { COLORS, data, isDue, metaOf, openItemMenu, setMeta, app, toggleSel, ui } from '@/lib/store.svelte';
+  import { COLORS, data, dropsAfter, isDue, metaOf, openItemMenu, setMeta, app, toggleSel, ui } from '@/lib/store.svelte';
   import type { Row } from '@/lib/types';
   import Glyph from './Glyph.svelte';
   import Icon from './Icon.svelte';
@@ -33,7 +33,12 @@
     class:previewless={!n.url && !preview.length}
     data-id={n.id}
     draggable={n.id ? 'true' : undefined}
+    class:drop-before={ui.dropHint?.id === n.id && ui.dropHint?.after === false}
+    class:drop-after={ui.dropHint?.id === n.id && ui.dropHint?.after === true}
     ondragstart={n.id ? (e) => e.dataTransfer!.setData('text/bookmark', id) : undefined}
+    ondragend={() => (ui.dropHint = null)}
+    ondragover={n.id ? (e) => { if (e.dataTransfer?.types.includes('text/bookmark')) ui.dropHint = { id, after: dropsAfter(e, e.currentTarget) }; } : undefined}
+    ondragleave={(e) => { if (ui.dropHint?.id === n.id && !e.currentTarget.contains(e.relatedTarget as Node | null)) ui.dropHint = null; }}
     oncontextmenu={n.id && !ui.selecting ? (e) => { e.preventDefault(); openItemMenu(id, e.currentTarget); } : undefined}
     role="listitem"
   >

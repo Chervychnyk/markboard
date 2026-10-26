@@ -45,6 +45,8 @@ export const ui = $state({
   aside: true,
   /** set when a column's search button opens the gallery; the gallery focuses its search and clears it */
   focusSearch: false,
+  /** where a dragged bookmark would land: before or after this row */
+  dropHint: null as { id: string; after: boolean } | null,
 });
 
 export const save = (...keys: (keyof Data)[]) =>
@@ -233,14 +235,23 @@ export async function edit(n: BNode) {
 }
 
 /** Drop on an item inserts before it; drop on empty space appends. */
+/** Whether a drag over this row means "after it": its lower half, or its right half in a tile grid. */
+export function dropsAfter(e: DragEvent, row: Element) {
+  const r = row.getBoundingClientRect();
+  return row.closest('.gallery:not(.mode-list)') ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+}
+
 export async function dropBookmark(e: DragEvent, parentId: string) {
+  ui.dropHint = null;
   const id = e.dataTransfer?.getData('text/bookmark');
   if (!id) return;
-  const target = (e.target as Element).closest<HTMLElement>('.item')?.dataset.id;
+  const row = (e.target as Element).closest<HTMLElement>('.item');
+  const target = row?.dataset.id;
   const opts: { parentId: string; index?: number } = { parentId };
-  if (target && target !== id) {
-    const [before] = await browser.bookmarks.get(target);
-    if (before!.parentId === parentId) opts.index = before!.index;
+  if (row && target && target !== id) {
+    const [at] = await browser.bookmarks.get(target);
+    // move() counts the index before the dragged node leaves its place, so "after" is simply index + 1.
+    if (at?.parentId === parentId && at.index !== undefined) opts.index = at.index + (dropsAfter(e, row) ? 1 : 0);
   }
   browser.bookmarks.move(id, opts).catch((err) => toast(err.message));
 }

@@ -476,6 +476,11 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 /* The row stays lit above the menu backdrop. */
 .item.menu-open { z-index: 46; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .item.selected { background: var(--active); border-color: var(--accent); }
+/* Drop marker: an accent line on the edge where a dragged bookmark will land. */
+.item.drop-before { box-shadow: 0 -2px 0 var(--accent); }
+.item.drop-after { box-shadow: 0 2px 0 var(--accent); }
+.gallery:not(.mode-list) .item.drop-before { box-shadow: -3px 0 0 var(--accent); }
+.gallery:not(.mode-list) .item.drop-after { box-shadow: 3px 0 0 var(--accent); }
 .item.is-hidden { opacity: 0.5; }
 .item-link {
   display: flex; align-items: center; gap: 8px;
