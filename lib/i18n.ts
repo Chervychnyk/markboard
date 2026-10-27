@@ -186,6 +186,7 @@ export const ROWS: Record<string, string[]> = {
   'Work, Reading, Trip…': ['Робота, Читання, Подорож…', 'Trabajo, Lectura, Viaje…', 'Travail, Lecture, Voyage…', 'Arbeit, Lesen, Reise…'],
   'Add bookmark': ['Додати закладку', 'Añadir marcador', 'Ajouter le favori', 'Lesezeichen hinzufügen'],
   'Create folder': ['Створити папку', 'Crear carpeta', 'Créer le dossier', 'Ordner erstellen'],
+  'Outside board root — won\'t appear as a column.': ['Поза коренем дошки — не з’явиться колонкою.', 'Fuera de la raíz del tablero: no aparecerá como columna.', 'Hors de la racine du tableau : n’apparaîtra pas en colonne.', 'Außerhalb des Board-Ordners: wird nicht als Spalte angezeigt.'],
   'Work, Home, Trip…': ['Робота, Дім, Подорож…', 'Trabajo, Casa, Viaje…', 'Travail, Maison, Voyage…', 'Arbeit, Zuhause, Reise…'],
   'Start from': ['Почати з', 'Empezar desde', 'Partir de', 'Ausgangspunkt'],
   'Look': ['Вигляд', 'Aspecto', 'Apparence', 'Aussehen'],

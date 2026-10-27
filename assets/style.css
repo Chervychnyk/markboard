@@ -1234,6 +1234,7 @@ dialog.dialog-bare:has(> .nit) { width: min(440px, calc(100vw - 32px)); }
 .nws-start-desc { font-size: 12px; line-height: 1.35; color: var(--muted); }
 .nws-accents { margin-top: 8px; }
 .nws-hint { margin: 8px 0 0; font-size: 12px; color: var(--faint); }
+.nws-hint.warn { color: var(--warning); }
 .nws-foot { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
 .nws-foot .btn { height: 34px; padding: 0 14px; }
 .nws-foot .btn:disabled { opacity: 0.45; cursor: default; }

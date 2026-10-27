@@ -2,7 +2,7 @@
   import { favicon } from '@/lib/core';
   import { toast } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { folderOptions, refresh, wsRoot } from '@/lib/store.svelte';
+  import { data, folderOptions, refresh, wsRoot } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
   let { close, folder: start, kind }: { close: () => void; folder?: string; kind: 'bookmark' | 'folder' } = $props();
@@ -11,6 +11,15 @@
   let title = $state('');
   let folder = $derived(start ?? wsRoot()?.id ?? ''); // the picked folder overrides it
   const isBookmark = $derived(kind === 'bookmark');
+  const outsideRoot = $derived.by(() => {
+    const root = wsRoot();
+    let node = data.byId.get(folder);
+    while (node) {
+      if (node.id === root.id) return false;
+      node = node.parentId ? data.byId.get(node.parentId) : undefined;
+    }
+    return true;
+  });
   // Like the address bar: a link typed without a scheme gets https://.
   const link = $derived.by(() => {
     const v = url.trim();
@@ -64,6 +73,9 @@
     <select class="st-select nit-folder" bind:value={folder}>
       {#each folderOptions() as [id, label] (id)}<option value={id}>{label}</option>{/each}
     </select>
+    {#if !isBookmark && outsideRoot}
+      <p class="nws-hint warn">{t("Outside board root — won't appear as a column.")}</p>
+    {/if}
   </label>
 
   <footer class="nws-foot">
