@@ -30,6 +30,7 @@ export const ROWS: Record<string, string[]> = {
   'Tags': ['Теги', 'Etiquetas', 'Étiquettes', 'Tags'],
   'Filter by #{0}': ['Фільтр за #{0}', 'Filtrar por #{0}', 'Filtrer par #{0}', 'Nach #{0} filtern'],
   'Folders': ['Папки', 'Carpetas', 'Dossiers', 'Ordner'],
+  'No folders': ['Немає папок', 'No hay carpetas', 'Aucun dossier', 'Keine Ordner'],
   'Notes & widgets': ['Нотатки й віджети', 'Notas y widgets', 'Notes et widgets', 'Notizen & Widgets'],
   'Hide sidebar': ['Сховати бічну панель', 'Ocultar panel lateral', 'Masquer le panneau latéral', 'Seitenleiste ausblenden'],
   'Show sidebar': ['Показати бічну панель', 'Mostrar panel lateral', 'Afficher le panneau latéral', 'Seitenleiste einblenden'],

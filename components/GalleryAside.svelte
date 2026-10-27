@@ -62,6 +62,9 @@
 
   {#if tab === 'folders'}
     <nav class="folder-nav" aria-label={t('Folders')}>
+      {#if folders.length === 0}
+        <div class="folder-empty">{t('No folders')}</div>
+      {:else}
       {#each folders as f (f.id)}
         <a
           class="folder-link"
@@ -80,6 +83,7 @@
           <span class="folder-total">{childCount(f.id)}</span>
         </a>
       {/each}
+      {/if}
     </nav>
   {:else}
     {#each w.widgets as x (x.id)}<WidgetCard w={x} />{/each}
