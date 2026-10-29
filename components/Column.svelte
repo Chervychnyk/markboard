@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import { t } from '@/lib/i18n';
   import {
-    COLORS, createBookmark, dropBookmark, HEX, isCollapsed, open, openColMenu, saveWs, toggleCollapsed, ui, ws,
+    COLORS, createBookmark, dropBookmark, HEX, isCollapsed, open, openColMenu, toggleCollapsed, ui, ws,
   } from '@/lib/store.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
 
@@ -20,16 +20,11 @@
   const name = $derived(ws().colNames[k] || title);
   const folded = $derived(isCollapsed(k));
 
+  // Cards are moved by Board (pointer drag on this header); a drop here is a bookmark.
   function drop(e: DragEvent) {
     e.preventDefault();
     over = false;
-    const moving = e.dataTransfer!.getData('text/column');
-    if (!moving) return folderId && dropBookmark(e, folderId);
-    if (moving === k) return;
-    const keys = [...document.querySelectorAll<HTMLElement>('#main .col')].map((c) => c.dataset.key!).filter((x) => x !== moving);
-    keys.splice(keys.indexOf(k), 0, moving);
-    ws().order = keys;
-    saveWs();
+    if (folderId) void dropBookmark(e, folderId);
   }
 
   function dragLeave(e: DragEvent) {
@@ -51,11 +46,10 @@
   ondrop={drop}
   role="list"
 >
-  <!-- svelte-ignore a11y_no_static_element_interactions (dragging is a pointer-only extra; the menu and keys cover the rest) -->
-  <header class="col-head" draggable="true" title={t('Drag to reorder')} ondragstart={(e) => e.dataTransfer!.setData('text/column', k)}>
+  <header class="col-head" title={t('Drag to reorder')}>
     <!-- A column's color is its top stripe, so the icon never gives way to a dot. -->
     {#if icon}<span class="col-ico" aria-hidden="true"><Glyph name={icon} size={14} /></span>{/if}
-    {#if folderId}<a class="col-name" href={'#' + folderId} title={t('Open gallery')}>{name}</a>{:else}<span class="col-name">{name}</span>{/if}
+    {#if folderId}<a class="col-name" href={'#' + folderId} draggable="false" title={t('Open gallery')}>{name}</a>{:else}<span class="col-name">{name}</span>{/if}
     {#if count !== undefined}<span class="col-count">{count}</span>{/if}
     <div class="col-actions">
       {#if folderId}

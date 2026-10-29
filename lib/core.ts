@@ -33,7 +33,7 @@ export const LOOK_DEFAULTS: Look = {
 };
 
 export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace => ({
-  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [], hidden: [], favs: [], cols: [],
+  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], lanes: {}, colNames: {}, colColors: {}, collapsed: [], hidden: [], favs: [], cols: [],
 });
 
 // --- Markboard's own tree: folders and links kept in storage, shaped like browser bookmarks ---
@@ -106,8 +106,23 @@ export function copyWorkspace(w: Workspace, name: string): Workspace {
   return {
     ...structuredClone(w), name, notes, widgets,
     order: w.order.map(key), hiddenCols: w.hiddenCols.map(key), collapsed: w.collapsed.map(key),
-    widths: keyed(w.widths), colNames: keyed(w.colNames), colColors: keyed(w.colColors),
+    widths: keyed(w.widths), lanes: keyed(w.lanes), colNames: keyed(w.colNames), colColors: keyed(w.colColors),
   };
+}
+
+/**
+ * Deals the board's cards (in `order`) into `n` lanes, Pinterest-style. A card the user placed keeps its lane while
+ * the board has that many; the rest go to the shortest lane by estimated height, widgets to the last lane on boards
+ * of three or more.
+ */
+export function layoutLanes<C extends { k: string }>(cards: C[], n: number, placed: Record<string, number>, height: (c: C) => number, isWidget: (c: C) => boolean): C[][] {
+  const lanes: C[][] = Array.from({ length: n }, () => []);
+  const heights = new Array<number>(n).fill(0);
+  const put = (c: C, i: number) => { lanes[i]!.push(c); heights[i]! += height(c) + 12; };
+  const loose = cards.filter((c) => !(placed[c.k]! < n));
+  for (const c of cards) if (placed[c.k]! < n) put(c, placed[c.k]!);
+  for (const c of loose) put(c, isWidget(c) && n >= 3 ? n - 1 : heights.indexOf(Math.min(...heights)));
+  return lanes;
 }
 
 export const DEFAULTS: Data = {

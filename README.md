@@ -13,7 +13,9 @@ npm run build    # -> .output/chrome-mv3, load via chrome://extensions → Load 
 ## Features
 
 - **Board**: the bookmarks bar (or any folder, per workspace) as resizable, reorderable, colourable columns, plus
-  Recently added, Most visited, Favorites, Reminders and Sessions columns. Drag bookmarks, columns and widgets.
+  Recently added, Most visited, Favorites, Reminders and Sessions columns. Cards (folders, notes, widgets) stack
+  in lanes like a Pinterest board: drag one by its header into any lane at any spot, or leave a lane empty; cards you
+  never moved fill the shortest lane. Bookmarks drag between folders.
 - **Gallery** (click a column title): grid, extended or list, sorted manually, by name or by date; bulk rename.
 - **Bookmarks**: favorites, colour labels, tags, comments, custom icons, reminders (notifications), pins to the
   top bar, hiding. Selection mode (<kbd>S</kbd>) to favorite, colour, move, copy or delete many at once.

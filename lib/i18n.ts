@@ -215,8 +215,6 @@ export const ROWS: Record<string, string[]> = {
   'Gallery': ['Галерея', 'Galería', 'Galerie', 'Galerie'],
   'Open all': ['Відкрити всі', 'Abrir todos', 'Tout ouvrir', 'Alle öffnen'],
   'Custom color': ['Власний колір', 'Color personalizado', 'Couleur personnalisée', 'Eigene Farbe'],
-  'Move earlier': ['Перемістити раніше', 'Mover antes', 'Déplacer avant', 'Nach vorn'],
-  'Move later': ['Перемістити пізніше', 'Mover después', 'Déplacer après', 'Nach hinten'],
   'Toolbar & header': ['Панель і заголовок', 'Barra y encabezado', 'Barre et en-tête', 'Leiste und Kopfzeile'],
   'Top bar': ['Верхня панель', 'Barra superior', 'Barre du haut', 'Obere Leiste'],
   'Dock': ['Нижня панель', 'Barra inferior', 'Barre du bas', 'Untere Leiste'],

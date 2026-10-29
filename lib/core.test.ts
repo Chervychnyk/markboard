@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  ago, copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, moveNode, newWorkspace, normalizeWorkspace, parseSchedule, parseTable, periodKey, sanitize, search,
+  ago, copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, layoutLanes, moveNode, newWorkspace, normalizeWorkspace, parseSchedule, parseTable, periodKey, sanitize, search,
 } from './core.ts';
 import { providedCommands } from './commands.ts';
 import type { BNode } from './types.ts';
@@ -81,12 +81,25 @@ test('bundled template is valid', () => {
   for (const w of tpl.workspace.widgets) if (w.tz) assert.ok(Intl.supportedValuesOf('timeZone').includes(w.tz), w.tz);
 });
 
+test('layoutLanes keeps placed cards in their lane and deals the rest to the shortest', () => {
+  const cards = ['a', 'b', 'c', 'w', 'd'].map((k) => ({ k }));
+  const keys = (lanes: { k: string }[][]) => lanes.map((l) => l.map((c) => c.k));
+  const h = () => 100, widget = (c: { k: string }) => c.k === 'w';
+  assert.deepEqual(keys(layoutLanes(cards, 3, {}, h, widget)), [['a', 'd'], ['b'], ['c', 'w']]);
+  // Placed in lane 0 and 2, lane 1 left empty; the loose ones fill the shortest lanes after them.
+  assert.deepEqual(keys(layoutLanes(cards, 4, { a: 0, b: 0, c: 0, w: 0, d: 2 }, h, widget)), [['a', 'b', 'c', 'w'], [], ['d'], []]);
+  assert.deepEqual(keys(layoutLanes(cards, 3, { a: 2, b: 2 }, h, widget)), [['c'], ['d'], ['a', 'b', 'w']]);
+  // A lane past the board's count no longer exists: its cards are dealt like new ones.
+  assert.deepEqual(keys(layoutLanes(cards, 2, { a: 3, b: 1 }, h, widget)), [['a', 'c', 'd'], ['b', 'w']]);
+});
+
 test('copyWorkspace copies the layout and gives notes and widgets their own ids', () => {
   const w = { ...newWorkspace('Work'), hidden: ['b1'], favs: ['b3'], collapsed: ['f1'] };
   w.notes = [{ id: 'n1', title: 'Todo', text: 'x', checklist: [] }];
   w.widgets = [{ id: 'w1', type: 'clock' }];
   w.order = ['f1', 'note:n1', 'widget:w1'];
   w.colNames = { 'note:n1': 'Mine' };
+  w.lanes = { f1: 0, 'widget:w1': 2 };
   const c = copyWorkspace(w, 'Home');
   const [n, x] = [c.notes[0]!.id, c.widgets[0]!.id];
   assert.equal(c.name, 'Home');
@@ -94,6 +107,7 @@ test('copyWorkspace copies the layout and gives notes and widgets their own ids'
   assert.notEqual(x, 'w1');
   assert.deepEqual(c.order, ['f1', `note:${n}`, `widget:${x}`]);
   assert.deepEqual(c.colNames, { [`note:${n}`]: 'Mine' });
+  assert.deepEqual(c.lanes, { f1: 0, [`widget:${x}`]: 2 });
   assert.deepEqual(c.hidden, ['b1']);
   assert.deepEqual(c.favs, ['b3']);
   c.notes[0]!.text = 'changed';

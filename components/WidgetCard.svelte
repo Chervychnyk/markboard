@@ -52,23 +52,11 @@
     toast(t('Removed: {0}', t(def!.label)), t('Undo'), () => { list.splice(i, 0, copy); saveWs(); });
   }
 
-  // Dropping another widget here moves it before this one.
-  function drop(e: DragEvent) {
-    const id = e.dataTransfer!.getData('text/widget');
-    if (!id) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const list = ws().widgets, from = list.findIndex((x) => x.id === id);
-    if (from < 0 || id === w.id) return;
-    const [moved] = list.splice(from, 1);
-    list.splice(list.indexOf(w), 0, moved!);
-    saveWs();
-  }
 </script>
 
 {#if def && View}
-  <div class="widget w-{w.type}" ondragover={(e) => e.preventDefault()} ondrop={drop} role="listitem">
-    <div class="whead" draggable="true" title={t('Drag to reorder')} ondragstart={(e) => { e.stopPropagation(); e.dataTransfer!.setData('text/widget', w.id); }} role="group">
+  <div class="widget w-{w.type}" role="listitem">
+    <div class="whead" role="group">
       <span class="whead-ico"><Glyph name={def.icon} size={13} /></span>
       <span class="grow">{w.label || t(def.label)}</span>
       {#if tzDiff}<span class="tz-pill">{tzDiff}</span>{/if}

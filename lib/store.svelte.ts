@@ -51,9 +51,9 @@ export const ui = $state({
   focusSearch: false,
   /** where a dragged bookmark would land: before or after this row */
   dropHint: null as { id: string; after: boolean } | null,
+  /** the board's cards by lane, as laid out (Board keeps it current); dragging and the column menu move within it */
+  lanes: [] as string[][],
   /** the column whose ⋮ menu is open, and where its header sits */
-  /** the board's columns in layout order (Board keeps it current); the column menu moves within it */
-  colOrder: [] as string[],
   colMenu: null as { k: string; title: string; folderId?: string; rect: { top: number; left: number; right: number; bottom: number } } | null,
 });
 
@@ -134,15 +134,34 @@ export function openColMenu(k: string, title: string, folderId: string | undefin
   ui.colMenu = { k, title, folderId, rect: { top: r.top, left: r.left, right: r.right, bottom: r.bottom } };
 }
 
-/** Moves a column one step earlier or later in the board's layout order (lanes fill in that order). */
-export function moveColumn(k: string, dir: -1 | 1) {
-  // shortcut: while a filter hides columns, they drop out of this order and go last; merge with ws().order if that matters.
-  const keys = [...ui.colOrder];
-  const i = keys.indexOf(k), j = i + dir;
-  if (i < 0 || j < 0 || j >= keys.length) return;
-  [keys[i], keys[j]] = [keys[j]!, keys[i]!];
-  ws().order = keys;
+/** Puts a card at `index` in `lane` and pins every card on the board to its lane, so the rest stay where they are. */
+export function placeCard(k: string, lane: number, index: number) {
+  const lanes = ui.lanes.map((l) => l.filter((x) => x !== k));
+  lanes[lane]?.splice(index, 0, k);
+  const w = ws(), keys = lanes.flat();
+  w.lanes = { ...w.lanes, ...Object.fromEntries(lanes.flatMap((l, i) => l.map((x) => [x, i]))) };
+  // Cards off the board (hidden) keep their place after the ones on it.
+  const rest = w.order.flatMap((x) => (x === 'widgets' ? w.widgets.map((y) => 'widget:' + y.id) : [x])).filter((x) => !keys.includes(x));
+  w.order = [...keys, ...rest];
   saveWs();
+}
+
+/** The column menu's arrows: left and right go to the next lane at about the same height, up and down swap with a neighbour. */
+export function moveCard(k: string, dir: 'up' | 'down' | 'left' | 'right') {
+  const lane = ui.lanes.findIndex((l) => l.includes(k));
+  if (lane < 0) return;
+  const i = ui.lanes[lane]!.indexOf(k);
+  if (dir === 'up' || dir === 'down') return placeCard(k, lane, i + (dir === 'up' ? -1 : 1));
+  const to = lane + (dir === 'left' ? -1 : 1);
+  if (ui.lanes[to]) placeCard(k, to, Math.min(i, ui.lanes[to].length));
+}
+
+/** Whether moveCard can go that way. */
+export function canMoveCard(k: string, dir: 'up' | 'down' | 'left' | 'right') {
+  const lane = ui.lanes.findIndex((l) => l.includes(k));
+  if (lane < 0) return false;
+  const i = ui.lanes[lane]!.indexOf(k);
+  return dir === 'up' ? i > 0 : dir === 'down' ? i < ui.lanes[lane]!.length - 1 : !!ui.lanes[lane + (dir === 'left' ? -1 : 1)];
 }
 
 /** The item menu's Hide and Delete, shared by its buttons and the H / Del keys. */
@@ -278,7 +297,7 @@ function reassign(ids: Map<string, string>) {
   for (const w of Object.values(app.workspaces)) {
     if (w.root) w.root = id(w.root);
     for (const list of ['favs', 'hidden', 'cols', 'collapsed', 'order', 'hiddenCols'] as const) w[list] = w[list].map(id);
-    w.widths = keyed(w.widths); w.colNames = keyed(w.colNames); w.colColors = keyed(w.colColors);
+    w.widths = keyed(w.widths); w.lanes = keyed(w.lanes); w.colNames = keyed(w.colNames); w.colColors = keyed(w.colColors);
   }
   saveWs();
 }

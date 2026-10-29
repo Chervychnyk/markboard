@@ -49,6 +49,8 @@ export interface Workspace {
   hiddenCols: string[];
   widths: Record<string, number>;
   order: string[];
+  /** the lane each card was dragged to (column key → lane index); cards not in it are dealt to the shortest lane */
+  lanes: Record<string, number>;
   colNames: Record<string, string>;
   colColors: Record<string, string>;
   /** columns and subfolders folded to their header */

@@ -2,7 +2,7 @@
   import { tick } from 'svelte';
   import { t } from '@/lib/i18n';
   import {
-    COLORS, createBookmark, createFolder, data, deleteNote, HEX, moveColumn, open, openAll, removeMany, saveWs, ui, ws,
+    COLORS, createBookmark, createFolder, data, deleteNote, HEX, canMoveCard, moveCard, open, openAll, removeMany, saveWs, ui, ws,
   } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
@@ -37,10 +37,12 @@
 
   const run = (fn: (id: string) => unknown) => () => { const id = c!.folderId!; close(); fn(id); };
 
-  // The column jumps to another lane, so the menu follows its header there.
-  async function move(dir: -1 | 1) {
+  const ARROWS = [['left', 'Move left'], ['up', 'Move up'], ['down', 'Move down'], ['right', 'Move right']] as const;
+
+  // The column may jump to another lane, so the menu follows its header there.
+  async function move(dir: 'up' | 'down' | 'left' | 'right') {
     if (!c) return;
-    moveColumn(c.k, dir);
+    moveCard(c.k, dir);
     await tick();
     const head = document.querySelector(`#main .col[data-key="${CSS.escape(c.k)}"] .col-head`);
     if (head && ui.colMenu) {
@@ -122,8 +124,9 @@
       <div class="im-label">{t('Arrange')}</div>
       <div class="im-arrange">
         <div class="im-arrows">
-          <button type="button" title={t('Move earlier')} aria-label={t('Move earlier')} disabled={ui.colOrder.indexOf(c.k) <= 0} onclick={() => move(-1)}><Glyph name="left" size={14} /></button>
-          <button type="button" title={t('Move later')} aria-label={t('Move later')} disabled={ui.colOrder.indexOf(c.k) >= ui.colOrder.length - 1} onclick={() => move(1)}><Glyph name="right" size={14} /></button>
+          {#each ARROWS as [dir, label] (dir)}
+            <button type="button" title={t(label)} aria-label={t(label)} disabled={!canMoveCard(c.k, dir)} onclick={() => move(dir)}><Glyph name={dir} size={14} /></button>
+          {/each}
         </div>
       </div>
     </div>
