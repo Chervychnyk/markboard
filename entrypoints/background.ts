@@ -1,5 +1,6 @@
-// Reminder notifications, daily automatic backups, and board commands for the Tabkit palette.
+// Reminder notifications, daily automatic backups, board commands for the Tabkit palette, and the agent bridge.
 import { backupNow } from '@/lib/backup';
+import { connectBridge, disconnectBridge } from '@/lib/bridge';
 import { reconcile, SYNC_KEYS } from '@/lib/sync';
 import { providedCommands, type ProvidedLink, TABKIT_ID, type TabkitMessage } from '@/lib/commands';
 import { DEFAULTS, emptyLocal, findNode, flatten, isLocal } from '@/lib/core';
@@ -7,6 +8,8 @@ import { initLang, t } from '@/lib/i18n';
 import type { BNode, Data } from '@/lib/types';
 
 export default defineBackground(() => {
+  connectBridge();
+
   browser.runtime.onInstalled.addListener(() => {
     browser.alarms.create('backup', { periodInMinutes: 24 * 60 });
     registerWithTabkit();
@@ -16,12 +19,14 @@ export default defineBackground(() => {
 
   // Markboard folders and their boards follow the browser account: local edits go up, others' come down.
   browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && 'bridgeToken' in changes) { disconnectBridge(); connectBridge(); }
     if (area === 'sync' && 'sync:head' in changes) reconcile(500);
     else if (area === 'local' && !('syncedAt' in changes) && SYNC_KEYS.some((k) => k in changes)) reconcile(3000);
   });
 
   browser.alarms.onAlarm.addListener(async ({ name }) => {
-    if (name === 'backup') {
+    if (name === 'bridge') connectBridge();
+    else if (name === 'backup') {
       const { autoBackup } = await browser.storage.local.get('autoBackup');
       if (autoBackup) await backupNow();
     } else if (name.startsWith('remind:')) {

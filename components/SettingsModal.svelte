@@ -16,7 +16,7 @@
 
   let { close }: { close: () => void } = $props();
 
-  type TabId = 'appearance' | 'board' | 'workspaces' | 'toolbar' | 'general' | 'trash' | 'backups' | 'shortcuts';
+  type TabId = 'appearance' | 'board' | 'workspaces' | 'toolbar' | 'general' | 'agent' | 'trash' | 'backups' | 'shortcuts';
   let tab = $state<TabId>('appearance');
   let q = $state('');
 
@@ -30,6 +30,7 @@
     { id: 'workspaces', label: t('Workspaces'), sub: t('Separate boards over the same bookmarks'), icon: 'layers', count: Object.keys(app.workspaces).length },
     { id: 'toolbar', label: t('Toolbar & header'), sub: t('Choose what the top bar and dock show'), icon: 'panel' },
     { id: 'general', label: t('General'), sub: t('Language and duplicate bookmarks'), icon: 'sliders' },
+    { id: 'agent', label: t('Agent access'), sub: t('Let Claude read and update your boards'), icon: 'slash' },
     { id: 'trash', label: t('Trash'), sub: t('Deleted items you can still bring back'), icon: 'trash', group: t('Data'), count: app.trash.length || undefined },
     { id: 'backups', label: t('Backup & restore'), sub: t('Snapshots, export and import'), icon: 'archive' },
     { id: 'shortcuts', label: t('Keyboard shortcuts'), sub: t('Every key the board responds to'), icon: 'keyboard' },
@@ -87,6 +88,27 @@
     location.reload();
   }
 
+
+  // Agent access: the token lives outside `app`, so backups and sync never carry it (lib/bridge.ts).
+  const bridge = $state({ token: '', connected: false });
+  $effect(() => {
+    browser.storage.local.get(['bridgeToken', 'bridgeConnected']).then((v) => {
+      bridge.token = typeof v.bridgeToken === 'string' ? v.bridgeToken : '';
+      bridge.connected = v.bridgeConnected === true;
+    });
+    const watch = (c: Record<string, { newValue?: unknown }>, area: string) => {
+      if (area === 'local' && 'bridgeConnected' in c) bridge.connected = c.bridgeConnected!.newValue === true;
+    };
+    browser.storage.onChanged.addListener(watch);
+    return () => browser.storage.onChanged.removeListener(watch);
+  });
+  const mcpCommand = $derived(`claude mcp add markboard -s user -e MARKBOARD_TOKEN=${bridge.token} -- node /path/to/markboard/mcp/server.ts`);
+  function setBridge(on: boolean) {
+    bridge.token = on ? crypto.randomUUID() : '';
+    bridge.connected = false;
+    browser.storage.local.set({ bridgeToken: bridge.token, bridgeConnected: false });
+  }
+  const copy = (text: string) => navigator.clipboard.writeText(text).then(() => toast(t('Copied')));
 
   async function renameWs(id: string) {
     const target = app.workspaces[id];
@@ -396,6 +418,29 @@
           </div>
           <div class="st-bg-panel">
             <Duplicates groups={dupGroups} />
+          </div>
+        </section>
+
+      {:else if tab === 'agent'}
+        <section class="st-sec">
+          <div class="st-bg-panel">
+            <label class="st-switch-row">
+              <div><div class="st-row-title">{t('Let Claude update boards')}</div><div class="st-row-desc">{t('Claude Code can read your boards and change their notes, widgets and links')}</div></div>
+              <input type="checkbox" class="st-switch" checked={!!bridge.token} onchange={(e) => setBridge(e.currentTarget.checked)} />
+            </label>
+            {#if bridge.token}
+              <div class="st-switch-row">
+                <div><div class="st-row-title">{t('Status')}</div><div class="st-row-desc">{bridge.connected ? t('Connected to Claude') : t('Waiting for Claude: it connects when a Claude Code session with the Markboard server starts')}</div></div>
+                <span class="st-badge st-status" class:on={bridge.connected}>{bridge.connected ? t('Connected') : t('Not connected')}</span>
+              </div>
+              <div class="st-switch-row st-stack">
+                <div><div class="st-row-title">{t('Add the server to Claude Code')}</div><div class="st-row-desc">{t('Run once in a terminal, with the path to your Markboard checkout. Turning access off and on makes a new token.')}</div></div>
+                <div class="st-code-row">
+                  <code class="st-code">{mcpCommand}</code>
+                  <button type="button" class="btn sm" onclick={() => copy(mcpCommand)}>{t('Copy')}</button>
+                </div>
+              </div>
+            {/if}
           </div>
         </section>
 

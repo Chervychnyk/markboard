@@ -31,6 +31,8 @@ npm run build    # -> .output/chrome-mv3, load via chrome://extensions → Load 
 - **Safety**: trash (7 days) and an undo toast for every delete; duplicate finder; export/import; automatic
   daily backups, optionally into Downloads; templates.
 - **Toolbar popup**: save the current tab into a folder, search bookmarks.
+- **Claude can update boards**: with Agent access on, Claude Code reads a board and rewrites its notes, widgets
+  (a session *Schedule*, *Tables* for standings, snippets…) and folder links, through a local MCP server.
 - English, Ukrainian, Spanish, French, German.
 
 ### Commands and Tabkit
@@ -43,6 +45,22 @@ Tabkit, <kbd>F</kbd> says so; every command still has a key (<kbd>?</kbd> lists 
 The protocol is in `lib/commands.ts` here and `lib/providers.ts` in Tabkit (`tabkit:links` hands Tabkit the
 links in Markboard folders, so they come up in its bookmark search). Markboard registers on install,
 on browser start and whenever a board opens, so installing Tabkit later still links them.
+
+### Claude and the MCP server
+
+`mcp/server.ts` is an MCP server for Claude Code (or any MCP client). It has tools `list_boards`, `read_board`,
+`update_block`, `remove_block` and `set_links`. Claude Code starts it over stdio; it listens on
+`ws://127.0.0.1:47615`, and the extension connects to it while Settings → Agent access is on, every 30 s until it
+finds it. Only extension origins with the token shown there are let in.
+
+```sh
+cd mcp && npm install
+claude mcp add markboard -s user -e MARKBOARD_TOKEN=<token from Settings> -- node "$PWD/server.ts"
+```
+
+Then ask, say, *"Update my Race weekend board for the Mexico GP: session times, standings and links"*. Notes and
+widgets have a `key` (the Race weekend template sets `schedule`, `drivers`, `constructors`, `plan`), so each run
+replaces the same blocks. Links Claude replaces go to the trash. One Claude session at a time holds the port.
 
 ## Development
 
@@ -60,7 +78,9 @@ npm run icons      # assets/icon.svg -> public/icon/{16,32,48,128}.png (needs rs
 
 ## Layout
 
-- `entrypoints/background.ts`: reminder alarms, daily backups, and the Tabkit command provider.
+- `entrypoints/background.ts`: reminder alarms, daily backups, the Tabkit command provider and the agent bridge.
+- `lib/agent.ts` (pure, tested: what an agent may read and change) and `lib/bridge.ts` (the background's
+  WebSocket to `mcp/server.ts`); its writes carry `agentAt`, which an open board adopts like a sync.
 - `lib/store.svelte.ts`: persisted state (`app`), the bookmark tree (`data`), per-tab `ui` state, and every
   board action. Components mutate `app` in place and call `save()`/`saveWs()`.
   Bookmark writes go through `bm`, which sends `mb:` ids to Markboard's own tree (`app.local`, helpers in `core.ts`)

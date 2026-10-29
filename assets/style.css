@@ -962,7 +962,10 @@ li:hover > .hide, .hide:focus-visible { opacity: 1; }
 /* Notes & widgets sidebar. */
 .aside-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .aside-tabs { flex: 1; }
-.aside-tabs button { flex: 1; }
+.aside-tabs { min-width: 0; }
+.aside-tabs button { flex: 1; min-width: 0; }
+.aside-tabs button svg { flex: none; }
+.aside-tabs button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .aside-act {
   width: 30px; height: 30px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -1417,6 +1420,15 @@ dialog.dialog-bare:has(> .nit) { width: min(440px, calc(100vw - 32px)); }
 .st-val { min-width: 38px; text-align: right; font-size: 12.5px; color: var(--muted); }
 .st-control-label { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .st-row-desc { margin-top: 2px; font-size: 12.5px; font-weight: 400; line-height: 1.4; color: var(--muted); }
+.st-stack { flex-direction: column; align-items: stretch; }
+.st-code-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; }
+.st-code {
+  flex: 1; min-width: 0; padding: 7px 9px; border-radius: var(--radius-control); background: var(--raised); border: 1px solid var(--rule);
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; /* taste-skill-ignore: shell command */
+  overflow-wrap: anywhere; user-select: all;
+}
+.st-status { flex: none; white-space: nowrap; }
+.st-badge.on { background: color-mix(in srgb, var(--positive) 16%, transparent); color: var(--positive); }
 .st-row-desc.st-warn { color: var(--warning); }
 .st-switch {
   appearance: none; flex: none; position: relative;

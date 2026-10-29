@@ -711,8 +711,8 @@ export function startSync() {
   browser.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     const st = app as unknown as Record<string, unknown>;
-    // Taken even by the visible tab: the local tree (the popup writes it), and whatever sync brought in.
-    const synced = 'syncedAt' in changes;
+    // Taken even by the visible tab: the local tree (the popup writes it), and whatever sync or an agent brought in.
+    const synced = 'syncedAt' in changes || 'agentAt' in changes;
     for (const [k, { newValue }] of Object.entries(changes))
       if (k in DEFAULTS && (document.hidden || synced || ['backups', 'local', 'syncStatus'].includes(k))) st[k] = newValue ?? structuredClone(DEFAULTS[k as keyof Data]);
     if ((document.hidden || synced) && 'workspaces' in changes) normalize();
