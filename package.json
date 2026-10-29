@@ -1,7 +1,7 @@
 {
   "name": "markboard",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Your browser bookmarks as a board on the new tab page.",
   "type": "module",
   "scripts": {
