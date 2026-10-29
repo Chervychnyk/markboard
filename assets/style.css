@@ -654,6 +654,9 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .sched .next { font-weight: 600; }
 .sched .next .sched-when { color: var(--accent); }
 .wtable-wrap { max-height: 260px; overflow: auto; }
+/* Scrolling inside a widget: no track, and a thin thumb only while hovered or focused (its room stays, so nothing shifts). */
+.widget :is(.wtable-wrap, pre) { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.widget :is(.wtable-wrap, pre):is(:hover, :focus-within, :focus-visible) { scrollbar-color: color-mix(in srgb, var(--text) 30%, transparent) transparent; }
 .wtable { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .wtable th { font-weight: 600; color: var(--muted); text-align: left; }
 .wtable th, .wtable td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
