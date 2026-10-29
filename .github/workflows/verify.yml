@@ -15,5 +15,9 @@ jobs:
         with:
           node-version: 24 # the tests run .ts files directly and use JSON import attributes
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mcp/package-lock.json
       - run: npm ci
+      - run: npm ci --prefix mcp # svelte-check type-checks mcp/server.ts against its own packages
       - run: npm run verify
