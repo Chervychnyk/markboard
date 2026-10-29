@@ -1,12 +1,14 @@
 <script lang="ts">
+  import type { AgentRun } from '@/lib/agent';
   import { backupNow } from '@/lib/backup';
+  import { ago } from '@/lib/core';
   import { TEMPLATES } from '@/lib/commands';
   import { form, toast } from '@/lib/dialogs.svelte';
   import { LANGS, locale, t } from '@/lib/i18n';
   import { ACCENT_NAMES, newWorkspaceDialog, pickBackupFile } from '@/lib/settings';
   import {
     ACCENTS, applyData, dedupe, deleteWorkspace, duplicateGroups, emptyTrash, exportData,
-    folderOptions, FONT_NAMES, FONTS, loadTemplate, look, PRESET_NAMES, PRESETS, save, saveWs, app, switchWs, TRASH_DAYS, ws, wsRoot,
+    folderOptions, FONT_NAMES, FONTS, loadTemplate, undoAgentRun, look, PRESET_NAMES, PRESETS, save, saveWs, app, switchWs, TRASH_DAYS, ws, wsRoot,
   } from '@/lib/store.svelte';
   import Duplicates from './Duplicates.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
@@ -90,14 +92,17 @@
 
 
   // Agent access: the token lives outside `app`, so backups and sync never carry it (lib/bridge.ts).
-  const bridge = $state({ token: '', connected: false });
+  const bridge = $state<{ token: string; connected: boolean; run?: AgentRun }>({ token: '', connected: false });
   $effect(() => {
-    browser.storage.local.get(['bridgeToken', 'bridgeConnected']).then((v) => {
+    browser.storage.local.get(['bridgeToken', 'bridgeConnected', 'agentRun']).then((v) => {
       bridge.token = typeof v.bridgeToken === 'string' ? v.bridgeToken : '';
       bridge.connected = v.bridgeConnected === true;
+      bridge.run = v.agentRun as AgentRun | undefined;
     });
     const watch = (c: Record<string, { newValue?: unknown }>, area: string) => {
-      if (area === 'local' && 'bridgeConnected' in c) bridge.connected = c.bridgeConnected!.newValue === true;
+      if (area !== 'local') return;
+      if ('bridgeConnected' in c) bridge.connected = c.bridgeConnected!.newValue === true;
+      if ('agentRun' in c) bridge.run = c.agentRun!.newValue as AgentRun | undefined;
     };
     browser.storage.onChanged.addListener(watch);
     return () => browser.storage.onChanged.removeListener(watch);
@@ -433,6 +438,15 @@
                 <div><div class="st-row-title">{t('Status')}</div><div class="st-row-desc">{bridge.connected ? t('Connected to Claude') : t('Waiting for Claude: it connects when a Claude Code session with the Markboard server starts')}</div></div>
                 <span class="st-badge st-status" class:on={bridge.connected}>{bridge.connected ? t('Connected') : t('Not connected')}</span>
               </div>
+              {#if bridge.run}
+                <div class="st-switch-row">
+                  <div>
+                    <div class="st-row-title">{t('Last update by Claude')}</div>
+                    <div class="st-row-desc">{bridge.run.boards.join(', ')} · {t('Changes: {0}', bridge.run.changes)} · {ago(bridge.run.last, locale)}</div>
+                  </div>
+                  <button type="button" class="btn sm" onclick={undoAgentRun}>{t('Undo')}</button>
+                </div>
+              {/if}
               <div class="st-switch-row st-stack">
                 <div><div class="st-row-title">{t('Add the server to Claude Code')}</div><div class="st-row-desc">{t('Run once in a terminal, with the path to your Markboard checkout. Turning access off and on makes a new token.')}</div></div>
                 <div class="st-code-row">

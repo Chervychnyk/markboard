@@ -33,10 +33,11 @@ export interface Look {
 }
 
 /** `key` names a note or widget for whoever fills it in (a template, an agent), so an update replaces it instead of adding one. */
-export interface Note { id: string; key?: string; title: string; text: string; checklist: { text: string; done: boolean }[] }
+/** `agentAt`: when an agent last wrote it, shown on the block until the user edits it. */
+export interface Note { id: string; key?: string; agentAt?: number; title: string; text: string; checklist: { text: string; done: boolean }[] }
 
 /** A widget's own settings and state live on it; `type` picks its WIDGETS entry. */
-export interface Widget { id: string; key?: string; type: string; label?: string; [k: string]: unknown }
+export interface Widget { id: string; key?: string; agentAt?: number; type: string; label?: string; [k: string]: unknown }
 
 export interface Workspace {
   name: string;

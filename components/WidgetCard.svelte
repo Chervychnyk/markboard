@@ -5,6 +5,7 @@
   import { saveWs, ws } from '@/lib/store.svelte';
   import type { Widget } from '@/lib/types';
   import { WIDGETS } from '@/lib/widgets';
+  import AgentMark from './AgentMark.svelte';
   import Glyph from './Glyph.svelte';
   import { VIEWS } from './widgets/index';
 
@@ -40,6 +41,7 @@
       (v as Record<string, unknown>)[f.name] = file ? await dataUrl(file) : w[f.name];
     }
     Object.assign(w, v);
+    delete w.agentAt; // the user's now
     saveWs();
   }
 
@@ -76,5 +78,6 @@
       </span>
     </div>
     <View {w} save={saveWs} />
+    <AgentMark at={w.agentAt} />
   </div>
 {/if}

@@ -185,4 +185,12 @@ export function parseTable(text: string): string[][] {
     .map((l) => l.split('|').map((c) => c.trim()));
 }
 
+/** "2 hours ago", "yesterday", "now" in `locale`. */
+export function ago(at: number, locale: string, now = Date.now()) {
+  const s = Math.round((at - now) / 1000), rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  for (const [unit, sec] of [['day', 86400], ['hour', 3600], ['minute', 60]] as const)
+    if (Math.abs(s) >= sec) return rtf.format(Math.round(s / sec), unit);
+  return rtf.format(0, 'second');
+}
+
 export const clamp = (v: unknown, lo: number, hi: number) => Math.min(hi, Math.max(lo, Number(v) || 0));

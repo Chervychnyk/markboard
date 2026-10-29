@@ -1,13 +1,16 @@
 // The background's end of the agent bridge: while Settings → Agent access holds a token, it connects to
 // mcp/server.ts on localhost and runs the server's ops on storage and bookmarks. Board tabs take the writes
 // (they carry `agentAt`, which a visible tab adopts like a sync), and sync pushes them on as usual.
-import { boardView, BRIDGE_PORT, type BlockIn, type BridgeMessage, findBoard, type LinkIn, planLinks, removeBlock, upsertBlock } from './agent.ts';
+import {
+  type AgentRun, boardView, BRIDGE_PORT, type BlockIn, type BridgeMessage, currentRun, findBoard, type LinkIn, noteChange, planLinks, removeBlock, upsertBlock,
+} from './agent.ts';
 import { DEFAULTS, detachNode, emptyLocal, findNode, insertNode, isLocal, LOCAL_ROOT, normalizeWorkspace, reindex } from './core.ts';
 import type { BNode, Data, Meta, TrashEntry } from './types.ts';
 import { WIDGETS } from './widgets.ts';
 
-type State = Pick<Data, 'workspaces' | 'ws' | 'local' | 'meta' | 'trash'>;
-const KEYS = ['workspaces', 'ws', 'local', 'meta', 'trash'] as const;
+/** `agentRun` lives beside Data, not in it: it is this device's undo, never backed up or synced. */
+type State = Pick<Data, 'workspaces' | 'ws' | 'local' | 'meta' | 'trash'> & { agentRun?: AgentRun };
+const KEYS = ['workspaces', 'ws', 'local', 'meta', 'trash', 'agentRun'] as const;
 
 let sock: WebSocket | undefined;
 let queue: Promise<unknown> = Promise.resolve();
@@ -45,14 +48,15 @@ export function disconnectBridge() {
 }
 
 async function load(): Promise<State> {
-  const d = { ...structuredClone(DEFAULTS), ...(await browser.storage.local.get([...KEYS])) } as Data;
+  const d = { ...structuredClone(DEFAULTS), ...(await browser.storage.local.get([...KEYS])) } as Data & State;
   for (const [id, w] of Object.entries(d.workspaces)) d.workspaces[id] = normalizeWorkspace(w, 'Notes');
   if (d.local?.id !== LOCAL_ROOT) d.local = emptyLocal();
   return d;
 }
 
-const commit = (s: State, ...keys: (keyof State)[]) =>
-  browser.storage.local.set({ ...Object.fromEntries(keys.map((k) => [k, s[k]])), agentAt: Date.now() });
+/** Writes the changed keys and the run they belong to; the board shows the run with an Undo. */
+const commit = (s: State, r: AgentRun, ...keys: (keyof State)[]) =>
+  browser.storage.local.set({ ...Object.fromEntries(keys.map((k) => [k, s[k]])), agentRun: r, agentAt: Date.now() });
 
 /** A subtree from either tree: Markboard's own (in `s.local`) or the browser's. */
 async function subtree(s: State, id: string): Promise<BNode | undefined> {
@@ -87,16 +91,21 @@ const OPS: Record<string, (s: State, a: Args) => Promise<unknown>> = {
   },
 
   async update_block(s, a) {
-    const [, w] = findBoard(s.workspaces, String(a.board));
-    const done = upsertBlock(w, a.block as BlockIn, Object.keys(WIDGETS));
-    await commit(s, 'workspaces');
-    return { [done]: (a.block as BlockIn).key };
+    const [id, w] = findBoard(s.workspaces, String(a.board));
+    const block = a.block as BlockIn, r = currentRun(s.agentRun, Date.now());
+    const before = upsertBlock(w, block, Object.keys(WIDGETS), r.last);
+    noteChange(r, w.name, { id, key: block.key, before });
+    await commit(s, r, 'workspaces');
+    return { [before ? 'updated' : 'created']: block.key };
   },
 
   async remove_block(s, a) {
-    const [, w] = findBoard(s.workspaces, String(a.board));
-    if (!removeBlock(w, String(a.key))) throw new Error(`No note or widget with key "${a.key}"`);
-    await commit(s, 'workspaces');
+    const [id, w] = findBoard(s.workspaces, String(a.board));
+    const before = removeBlock(w, String(a.key));
+    if (!before) throw new Error(`No note or widget with key "${a.key}"`);
+    const r = currentRun(s.agentRun, Date.now());
+    noteChange(r, w.name, { id, key: String(a.key), before });
+    await commit(s, r, 'workspaces');
     return { removed: a.key };
   },
 
@@ -104,12 +113,15 @@ const OPS: Record<string, (s: State, a: Args) => Promise<unknown>> = {
   async set_links(s, a) {
     const [, w] = findBoard(s.workspaces, String(a.board));
     const { root, folders } = await boardFolders(s, w);
+    const r = currentRun(s.agentRun, Date.now());
+    const keepMeta = (id: string) => { if (!(id in r.meta)) r.meta[id] = s.meta[id] ? structuredClone(s.meta[id]) : null; };
     const ref = String(a.folder).trim();
     let folder = folders.find((f) => f.id === ref) ?? folders.find((f) => f.title.toLowerCase() === ref.toLowerCase());
     if (!folder) {
       folder = isLocal(root.id)
         ? insertNode(s.local, root.id, { title: ref.slice(0, 100) })
         : await browser.bookmarks.create({ parentId: root.id, title: ref.slice(0, 100) });
+      r.created.push(folder.id);
     }
     const local = isLocal(folder.id);
     const plan = planLinks(folder.children ?? [], (a.links ?? []) as LinkIn[], a.mode !== 'append');
@@ -122,8 +134,10 @@ const OPS: Record<string, (s: State, a: Args) => Promise<unknown>> = {
       trashed.push({ node: structuredClone(node), at: Date.now() });
     }
     const ids: string[] = [];
+    const had = new Map((folder.children ?? []).map((c) => [c.id, c.title]));
     for (const [i, l] of plan.links.entries()) {
       let id = l.id;
+      if (id && had.get(id) !== l.title && !r.retitled.some(([x]) => x === id)) r.retitled.push([id, had.get(id)!]);
       if (local) {
         const n = id && findNode(s.local, id);
         if (n) n.title = l.title;
@@ -134,7 +148,9 @@ const OPS: Record<string, (s: State, a: Args) => Promise<unknown>> = {
       } else {
         id = (await browser.bookmarks.create({ parentId: folder.id, index: i, title: l.title, url: l.url })).id;
       }
+      if (!l.id) r.created.push(id!);
       if (l.comment !== undefined) {
+        keepMeta(id!);
         const m: Meta = { ...s.meta[id!], comment: l.comment };
         if (!l.comment) delete m.comment;
         s.meta[id!] = m;
@@ -148,7 +164,9 @@ const OPS: Record<string, (s: State, a: Args) => Promise<unknown>> = {
       reindex(f);
     }
     s.trash.unshift(...trashed);
-    await commit(s, 'local', 'meta', 'trash');
+    r.trashed.push(...trashed);
+    noteChange(r, w.name);
+    await commit(s, r, 'local', 'meta', 'trash');
     return { folder: folder.title, links: ids.length, trashed: trashed.length };
   },
 };

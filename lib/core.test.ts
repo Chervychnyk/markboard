@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, moveNode, newWorkspace, normalizeWorkspace, parseSchedule, parseTable, periodKey, sanitize, search,
+  ago, copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, moveNode, newWorkspace, normalizeWorkspace, parseSchedule, parseTable, periodKey, sanitize, search,
 } from './core.ts';
 import { providedCommands } from './commands.ts';
 import type { BNode } from './types.ts';
@@ -143,4 +143,11 @@ test('parseTable: pipe rows, markdown tables too', () => {
   assert.deepEqual(parseTable('| Pos | Driver |\n|---|:--:|\n| 1 | Norris |\n'), [['Pos', 'Driver'], ['1', 'Norris']]);
   assert.deepEqual(parseTable('just text'), [['just text']]);
   assert.deepEqual(parseTable(''), []);
+});
+
+test('ago', () => {
+  const now = Date.UTC(2026, 9, 29, 12);
+  assert.equal(ago(now - 2 * 3600e3, 'en', now), '2 hours ago');
+  assert.equal(ago(now - 30e3, 'en', now), 'now');
+  assert.equal(ago(now - 864e5, 'en', now), 'yesterday');
 });

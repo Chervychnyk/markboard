@@ -6,6 +6,7 @@ import {
 import NewItem from '@/components/NewItem.svelte';
 import { form, modal, toast } from './dialogs.svelte.ts';
 import { initLang, locale, t } from './i18n.ts';
+import { type AgentRun, revertBlocks } from './agent.ts';
 import type { BNode, Data, Look, Meta, Row, TrashEntry, Workspace } from './types.ts';
 import { WIDGETS } from './widgets.ts';
 
@@ -388,6 +389,28 @@ export async function untrash(entry: TrashEntry) {
   save('trash');
 }
 
+/** Undoes the last agent run (lib/bridge.ts records it): blocks back as they were, links it made removed,
+ *  renamed ones renamed back, comments restored, and what it trashed restored. */
+export async function undoAgentRun() {
+  const { agentRun: r } = (await browser.storage.local.get('agentRun')) as { agentRun?: AgentRun };
+  if (!r) return;
+  await browser.storage.local.remove('agentRun');
+  revertBlocks(app.workspaces, r);
+  for (const id of [...r.created].reverse()) await bm.removeTree(id).catch(() => {}); // gone already, or inside one removed first
+  for (const [id, title] of r.retitled) await bm.update(id, { title }).catch(() => {});
+  for (const [id, m] of Object.entries(r.meta)) {
+    if (m) app.meta[id] = m;
+    else delete app.meta[id];
+  }
+  for (const e of r.trashed) {
+    const entry = app.trash.find((x) => x.at === e.at && x.node.id === e.node.id);
+    if (entry) await untrash(entry);
+  }
+  save('meta');
+  saveWs();
+  toast(t('Undid Claude’s changes'));
+}
+
 /** Re-creates a subtree under `parentId` with its meta; `ids` collects old id → new id. */
 async function restore(n: BNode, parentId: string, index?: number, ids = new Map<string, string>()) {
   const made = await bm.create({ parentId, index, title: n.title, url: n.url })
@@ -717,5 +740,7 @@ export function startSync() {
       if (k in DEFAULTS && (document.hidden || synced || ['backups', 'local', 'syncStatus'].includes(k))) st[k] = newValue ?? structuredClone(DEFAULTS[k as keyof Data]);
     if ((document.hidden || synced) && 'workspaces' in changes) normalize();
     if ('local' in changes) schedule();
+    const run = changes.agentRun?.newValue as AgentRun | undefined;
+    if (run && !document.hidden) toast(t('Claude updated {0}', run.boards.join(', ')), t('Undo'), undoAgentRun);
   });
 }
