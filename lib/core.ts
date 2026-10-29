@@ -171,4 +171,18 @@ export function periodKey(reset: string | undefined, d = new Date()) {
   return '';
 }
 
+/** A schedule widget's text: one "Label | when" per line, `when` anything Date parses (ISO with a zone is best). */
+export function parseSchedule(text: string): { label: string; at: number }[] {
+  return text.split('\n').map((l) => l.split('|').map((s) => s.trim()))
+    .map(([label = '', when = '']) => ({ label, at: when ? new Date(when).getTime() : NaN }))
+    .filter((s) => s.label && !Number.isNaN(s.at));
+}
+
+/** A table widget's text: rows of cells split by "|", the first row the header. Markdown tables read the same. */
+export function parseTable(text: string): string[][] {
+  return text.split('\n').map((l) => l.trim().replace(/^\||\|$/g, ''))
+    .filter((l) => l.trim() && !/^[\s|:-]+$/.test(l))
+    .map((l) => l.split('|').map((c) => c.trim()));
+}
+
 export const clamp = (v: unknown, lo: number, hi: number) => Math.min(hi, Math.max(lo, Number(v) || 0));

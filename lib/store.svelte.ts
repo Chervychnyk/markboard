@@ -580,7 +580,7 @@ export function exportData() {
 type Template = {
   template?: string;
   folders?: { title?: string; links?: { title?: string; url?: string; comment?: string }[] }[];
-  workspace?: { name?: string; look?: object; widgets?: Record<string, unknown>[]; notes?: { title?: string; text?: string; checklist?: string[] }[]; hiddenCols?: unknown[] };
+  workspace?: { name?: string; look?: object; widgets?: Record<string, unknown>[]; notes?: { key?: string; title?: string; text?: string; checklist?: string[] }[]; hiddenCols?: unknown[] };
 };
 
 /** Templates create folders, under Other bookmarks or in Markboard alone (`local`), plus a workspace showing them.
@@ -609,7 +609,7 @@ export async function applyTemplate(tpl: Template, name?: string, local = isLoca
     widgets: arr(w.widgets).filter((x) => WIDGETS[x?.type as string])
       .map((x) => ({ ...Object.fromEntries(Object.entries(x).filter(([, v]) => typeof v !== 'object')), type: x.type as string, id: crypto.randomUUID() })),
     notes: arr(w.notes).map((n) => ({
-      id: crypto.randomUUID(), title: str(n?.title, 100) || t('Note'), text: str(n?.text, 20000),
+      id: crypto.randomUUID(), ...(n?.key && { key: str(n.key, 100) }), title: str(n?.title, 100) || t('Note'), text: str(n?.text, 20000),
       checklist: arr(n?.checklist).map((c) => ({ text: str(c, 300), done: false })),
     })),
     hiddenCols: arr(w.hiddenCols).filter((k): k is string => typeof k === 'string'),

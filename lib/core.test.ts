@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, moveNode, newWorkspace, normalizeWorkspace, periodKey, sanitize, search,
+  copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, moveNode, newWorkspace, normalizeWorkspace, parseSchedule, parseTable, periodKey, sanitize, search,
 } from './core.ts';
 import { providedCommands } from './commands.ts';
 import type { BNode } from './types.ts';
@@ -76,6 +76,8 @@ test('bundled template is valid', () => {
   const tpl = JSON.parse(readFileSync(new URL('../public/templates/race-weekend.json', import.meta.url), 'utf8'));
   assert.equal(tpl.template, 'markboard');
   for (const f of tpl.folders) for (const l of f.links) assert.match(l.url, /^https:\/\//);
+  const keys = [...tpl.workspace.widgets, ...tpl.workspace.notes].map((x) => x.key).filter(Boolean);
+  assert.equal(new Set(keys).size, keys.length, 'keys are unique on a board');
   for (const w of tpl.workspace.widgets) if (w.tz) assert.ok(Intl.supportedValuesOf('timeZone').includes(w.tz), w.tz);
 });
 
@@ -129,4 +131,16 @@ test('sanitize checks the local tree', () => {
   assert.throws(() => sanitize({ local: { ...local, id: '1' } }));
   assert.throws(() => sanitize({ local: { ...local, children: [{ id: 'mb:1', title: 'x', url: 'javascript:alert(1)' }] } }));
   assert.throws(() => sanitize({ local: { ...local, children: [{ id: '5', title: 'x', children: [] }] } }));
+});
+
+test('parseSchedule: label | time lines, bad ones dropped', () => {
+  const s = parseSchedule('FP1 | 2026-10-30T18:30:00Z\n\nRace|2026-11-01T20:00:00Z\nTBC | soon\nno time\n | 2026-11-01T20:00:00Z');
+  assert.deepEqual(s, [{ label: 'FP1', at: Date.UTC(2026, 9, 30, 18, 30) }, { label: 'Race', at: Date.UTC(2026, 10, 1, 20) }]);
+});
+
+test('parseTable: pipe rows, markdown tables too', () => {
+  assert.deepEqual(parseTable('Pos | Driver | Pts\n1 | Norris | 357'), [['Pos', 'Driver', 'Pts'], ['1', 'Norris', '357']]);
+  assert.deepEqual(parseTable('| Pos | Driver |\n|---|:--:|\n| 1 | Norris |\n'), [['Pos', 'Driver'], ['1', 'Norris']]);
+  assert.deepEqual(parseTable('just text'), [['just text']]);
+  assert.deepEqual(parseTable(''), []);
 });

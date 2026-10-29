@@ -622,6 +622,20 @@ a.col-name:hover { text-decoration: underline; text-underline-offset: 2px; }
 .snippet-item svg { color: var(--muted); flex: none; }
 .snippet-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.sched { display: flex; flex-direction: column; margin-top: 6px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sched li { display: flex; gap: 8px; padding: 4px 0; border-top: 1px solid var(--rule); }
+.sched li:first-child { border-top: 0; }
+.sched-when { color: var(--muted); white-space: nowrap; }
+.sched .past, .sched .past .sched-when { color: var(--faint); text-decoration: line-through; text-decoration-color: var(--control); }
+.sched .next { font-weight: 600; }
+.sched .next .sched-when { color: var(--accent); }
+.wtable-wrap { max-height: 260px; overflow: auto; }
+.wtable { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.wtable th { font-weight: 600; color: var(--muted); text-align: left; }
+.wtable th, .wtable td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.wtable th:last-child, .wtable td:last-child { padding-right: 0; text-align: right; }
+.wtable-note { margin-top: 6px; }
+
 .add-widget {
   width: 100%; height: 32px; padding: 0 8px;
   border: 1px dashed var(--border); border-radius: var(--radius-control);

@@ -1,6 +1,7 @@
 {
   "template": "markboard",
   "folders": [
+    { "title": "This weekend", "links": [] },
     {
       "title": "Timing & data",
       "links": [
@@ -43,14 +44,17 @@
       "bgKind": "gradient", "bgPreset": "ember", "intensity": 40, "grain": true, "parallax": true
     },
     "widgets": [
+      { "type": "schedule", "key": "schedule", "label": "Sessions" },
+      { "type": "table", "key": "drivers", "label": "Drivers' standings" },
+      { "type": "table", "key": "constructors", "label": "Constructors' standings" },
       { "type": "clock", "label": "Melbourne", "tz": "Australia/Melbourne", "hours": "24" },
       { "type": "clock", "label": "Monza", "tz": "Europe/Rome", "hours": "24" },
       { "type": "clock", "label": "Las Vegas", "tz": "America/Los_Angeles", "hours": "24" },
-      { "type": "countdown", "label": "Race start" },
-      { "type": "counter", "label": "Fantasy points", "goal": 100, "reset": "week" }
+      { "type": "counter", "key": "fantasy", "label": "Fantasy points", "goal": 100, "reset": "week" }
     ],
     "notes": [
       {
+        "key": "plan",
         "title": "Race day plan",
         "text": "Qualifying recap Saturday night, race with friends on Sunday.",
         "checklist": ["Set fantasy lineup before qualifying", "Check the tyre allocation", "Charge the headphones", "Snacks ready before the start"]

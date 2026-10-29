@@ -39,6 +39,20 @@ export const WIDGETS: Record<string, { label: string; icon: GlyphName; fields?: 
     icon: 'note',
     fields: (w) => [label(w), { name: 'text', label: t('Text'), type: 'textarea', value: w.text }],
   },
+  schedule: {
+    label: 'Schedule',
+    icon: 'calendar',
+    fields: (w) => [label(w), { name: 'text', label: t('One per line: name | date and time'), type: 'textarea', value: w.text }],
+  },
+  table: {
+    label: 'Table',
+    icon: 'list',
+    fields: (w) => [
+      label(w),
+      { name: 'text', label: t('One row per line, cells split by |; the first row is the header'), type: 'textarea', value: w.text },
+      { name: 'note', label: t('Footnote (optional)'), value: w.note },
+    ],
+  },
   // A chosen file is stored on the widget as a data: URL under the field's name.
   photo: {
     label: 'Photo frame',
