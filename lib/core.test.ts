@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { copyWorkspace, flatten, fmt, newWorkspace, normalizeWorkspace, periodKey, sanitize, search } from './core.ts';
+import {
+  copyWorkspace, detachNode, emptyLocal, findNode, flatten, fmt, insertNode, moveNode, newWorkspace, normalizeWorkspace, periodKey, sanitize, search,
+} from './core.ts';
 import { providedCommands } from './commands.ts';
 import type { BNode } from './types.ts';
 
@@ -96,4 +98,35 @@ test('copyWorkspace copies the layout and gives notes and widgets their own ids'
   c.hidden.push('b2');
   assert.equal(w.notes[0]!.text, 'x'); // the original is untouched
   assert.deepEqual(w.hidden, ['b1']);
+});
+
+test('local tree: insert, move with browser index semantics, detach', () => {
+  const root = emptyLocal();
+  const a = insertNode(root, 'mb', { title: 'A' });
+  const [x, y, z] = ['x', 'y', 'z'].map((title) => insertNode(root, a.id, { title, url: `https://${title}.dev` }));
+  const order = () => findNode(root, a.id)!.children!.map((n) => n.title).join('');
+  assert.equal(order(), 'xyz');
+  assert.deepEqual([x!.index, z!.parentId], [0, a.id]);
+  moveNode(root, x!.id, a.id, 2); // dropped before z: counted with x still in place
+  assert.equal(order(), 'yxz');
+  moveNode(root, z!.id, a.id, 0);
+  assert.equal(order(), 'zyx');
+  const b = insertNode(root, a.id, { title: 'B' });
+  assert.throws(() => moveNode(root, a.id, b.id), /itself/);
+  moveNode(root, y!.id, b.id);
+  assert.equal(findNode(root, y!.id)!.parentId, b.id);
+  assert.equal(detachNode(root, a.id)!.title, 'A');
+  assert.equal(findNode(root, y!.id), undefined);
+  assert.equal(detachNode(root, 'mb'), undefined);
+  assert.throws(() => insertNode(root, 'mb:nope', { title: 'x' }));
+  assert.deepEqual(flatten([root]).map((n) => n.id), ['mb']);
+});
+
+test('sanitize checks the local tree', () => {
+  const local = emptyLocal();
+  insertNode(local, 'mb', { title: 'A' });
+  assert.deepEqual(sanitize({ local }), { local });
+  assert.throws(() => sanitize({ local: { ...local, id: '1' } }));
+  assert.throws(() => sanitize({ local: { ...local, children: [{ id: 'mb:1', title: 'x', url: 'javascript:alert(1)' }] } }));
+  assert.throws(() => sanitize({ local: { ...local, children: [{ id: '5', title: 'x', children: [] }] } }));
 });

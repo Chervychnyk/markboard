@@ -55,10 +55,16 @@ export interface Workspace {
   hidden: string[];
   /** favorites of this workspace */
   favs: string[];
+  /** folders shown as columns besides the root's own: Markboard folders made on this board */
+  cols: string[];
 }
 
+/** The background's last sync: when, how big (of about 100 KB), and why it failed ('size', or the browser's message). */
+export interface SyncStatus { at: number; bytes: number; error?: string }
+
 export interface Session { name: string; at: number; tabs: { title: string; url: string }[] }
-export interface TrashEntry { node: BNode; at: number }
+/** `board`: a deleted workspace whose Markboard folders went with it (`node` and `extra`); restoring brings back all. */
+export interface TrashEntry { node: BNode; at: number; board?: { id: string; w: Workspace; extra: BNode[] } }
 export interface Backup { date: number; data: Partial<Data> }
 
 /** Everything Markboard stores in chrome.storage.local, one key per field. */
@@ -78,4 +84,9 @@ export interface Data {
   hiddenTools: string[];
   /** the first-run welcome was shown */
   onboarded: boolean;
+  /** Markboard's own folders and links, kept out of the browser's bookmarks; `mb` ids (see core.ts) */
+  local: BNode;
+  /** sync `local`, its meta and the boards on it through the browser account (lib/sync.ts) */
+  sync: boolean;
+  syncStatus: SyncStatus | null;
 }

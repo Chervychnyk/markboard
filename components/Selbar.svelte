@@ -1,7 +1,7 @@
 <script lang="ts">
   import { form, toast } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { bulkMeta, COLORS, data, folderOptions, isFav, mark, removeMany, toggleSelect, ui } from '@/lib/store.svelte';
+  import { bm, bulkMeta, COLORS, data, folderOptions, isFav, mark, removeMany, toggleSelect, ui } from '@/lib/store.svelte';
 
   const nodes = $derived([...ui.selected].map((id) => data.byId.get(id)).filter((n) => !!n));
   const needs = (fn: () => unknown) => () => (nodes.length ? fn() : toast(t('Click items to select them first')));
@@ -13,7 +13,7 @@
   async function move() {
     const v = await form(t('Move to folder'), [{ name: 'folder', label: t('Folder'), type: 'select', options: folderOptions() }]);
     if (!v) return;
-    for (const n of nodes) await browser.bookmarks.move(n.id, { parentId: v.folder }).catch((e) => toast(e.message));
+    for (const n of nodes) await bm.move(n.id, { parentId: v.folder }).catch((e) => toast(e.message));
     toggleSelect();
   }
   const copy = () => navigator.clipboard.writeText(nodes.filter((n) => n.url).map((n) => n.url).join('\n')).then(() => toast(t('Links copied')));

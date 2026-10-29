@@ -33,8 +33,63 @@ export const LOOK_DEFAULTS: Look = {
 };
 
 export const newWorkspace = (name: string, look: Partial<Look> = {}): Workspace => ({
-  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [], hidden: [], favs: [],
+  name, look, notes: [], widgets: [{ id: crypto.randomUUID(), type: 'clock' }], hiddenCols: [], widths: {}, order: [], colNames: {}, colColors: {}, collapsed: [], hidden: [], favs: [], cols: [],
 });
+
+// --- Markboard's own tree: folders and links kept in storage, shaped like browser bookmarks ---
+
+/** Root of the local tree; its parent '0' is the browser's root, so it sits beside Bookmarks bar and Other bookmarks. */
+export const LOCAL_ROOT = 'mb';
+export const isLocal = (id: string | undefined) => id === LOCAL_ROOT || !!id?.startsWith('mb:');
+export const emptyLocal = (): BNode => ({ id: LOCAL_ROOT, parentId: '0', title: 'Markboard', children: [], syncing: false });
+
+export function findNode(n: BNode, id: string): BNode | undefined {
+  if (n.id === id) return n;
+  for (const c of n.children ?? []) {
+    const hit = findNode(c, id);
+    if (hit) return hit;
+  }
+}
+
+/** Keeps `parentId` and `index` true after a change, as the browser does for its own nodes. */
+export function reindex(n: BNode) {
+  n.children?.forEach((c, i) => { c.parentId = n.id; c.index = i; reindex(c); });
+}
+
+/** Adds a link (with `url`) or folder under `parentId`; throws if that is not a local folder. */
+export function insertNode(root: BNode, parentId: string, node: { title?: string; url?: string }, index?: number): BNode {
+  const parent = findNode(root, parentId);
+  if (!parent?.children) throw new Error(`No folder ${parentId}`);
+  const made: BNode = {
+    id: `mb:${crypto.randomUUID()}`, parentId, title: node.title ?? '', dateAdded: Date.now(), syncing: false,
+    ...(node.url ? { url: node.url } : { children: [] }),
+  };
+  parent.children.splice(index ?? parent.children.length, 0, made);
+  reindex(parent);
+  return made;
+}
+
+/** Takes a node (and what is inside it) out of the tree and returns it. */
+export function detachNode(root: BNode, id: string): BNode | undefined {
+  const n = findNode(root, id);
+  const parent = n?.parentId ? findNode(root, n.parentId) : undefined;
+  if (!n || !parent?.children || n === root) return;
+  parent.children.splice(parent.children.indexOf(n), 1);
+  reindex(parent);
+  return n;
+}
+
+/** Moves within the local tree with browser semantics: `index` counts the node still in its old place. */
+export function moveNode(root: BNode, id: string, parentId: string, index?: number) {
+  const n = findNode(root, id), parent = findNode(root, parentId);
+  if (!n || !parent?.children || n === root) throw new Error(`No folder ${parentId}`);
+  if (findNode(n, parentId)) throw new Error("Can't move a folder into itself");
+  const from = n.parentId === parentId ? parent.children.indexOf(n) : -1;
+  detachNode(root, id);
+  const at = index === undefined ? parent.children.length : Math.min(index - (from >= 0 && from < index ? 1 : 0), parent.children.length);
+  parent.children.splice(at, 0, n);
+  reindex(parent);
+}
 
 /** A new workspace that starts as a copy of `w`: same layout and look, its own notes and widgets (fresh ids). */
 export function copyWorkspace(w: Workspace, name: string): Workspace {
@@ -58,7 +113,8 @@ export function copyWorkspace(w: Workspace, name: string): Workspace {
 export const DEFAULTS: Data = {
   meta: {}, showHidden: false, galleryMode: 'extended',
   workspaces: { default: { ...newWorkspace('Personal'), widgets: [{ id: 'clock', type: 'clock' }] } }, ws: 'default',
-  sessions: [], trash: [], autoBackup: false, backupToDownloads: false, backups: [], lang: 'auto', hiddenTools: [], onboarded: false,
+  sessions: [], trash: [], autoBackup: false, backupToDownloads: false, backups: [], lang: 'auto', hiddenTools: [], onboarded: false, local: emptyLocal(),
+  sync: true, syncStatus: null,
 };
 
 /** Fills fields old or imported workspaces lack, and turns a v0.3 single-string note into a note list. */
@@ -69,9 +125,9 @@ export function normalizeWorkspace(w: Omit<Partial<Workspace>, 'notes'> & { note
   return out;
 }
 
-const TYPES: Record<keyof Omit<Data, 'backups'>, 'object' | 'array' | 'boolean' | 'string'> = {
+const TYPES: Record<keyof Omit<Data, 'backups' | 'syncStatus'>, 'object' | 'array' | 'boolean' | 'string'> = {
   meta: 'object', showHidden: 'boolean', galleryMode: 'string', workspaces: 'object', ws: 'string',
-  sessions: 'array', trash: 'array', autoBackup: 'boolean', backupToDownloads: 'boolean', lang: 'string', hiddenTools: 'array', onboarded: 'boolean',
+  sessions: 'array', trash: 'array', autoBackup: 'boolean', backupToDownloads: 'boolean', lang: 'string', hiddenTools: 'array', onboarded: 'boolean', local: 'object', sync: 'boolean',
 };
 
 /** Validates an imported/restored backup at the trust boundary; throws on bad shape. */
@@ -86,7 +142,15 @@ export function sanitize(d: unknown): Partial<Data> {
     out[k] = v;
   }
   if (out.workspaces && !Object.keys(out.workspaces).length) delete out.workspaces;
+  if (out.local && !validLocal(out.local as BNode, true)) throw new Error('bad local');
   return out as Partial<Data>;
+}
+
+/** A local tree from a backup: folders and http(s) links only, under the `mb` root. */
+function validLocal(n: BNode, root = false): boolean {
+  if (typeof n !== 'object' || !n || typeof n.title !== 'string' || (root ? n.id !== LOCAL_ROOT : !isLocal(n.id))) return false;
+  if (n.url !== undefined) return !root && typeof n.url === 'string' && /^https?:\/\//.test(n.url) && n.children === undefined;
+  return Array.isArray(n.children) && n.children.every((c) => validLocal(c));
 }
 
 const pad = (n: number) => String(n).padStart(2, '0'); // taste-skill-ignore: clock/timer digits

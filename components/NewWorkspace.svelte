@@ -1,9 +1,10 @@
 <script lang="ts">
   import { TEMPLATES } from '@/lib/commands';
+  import { isLocal } from '@/lib/core';
   import { toast } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
   import { ACCENT_NAMES } from '@/lib/settings';
-  import { ACCENTS, addWorkspace, loadTemplate, look, saveWs, ws } from '@/lib/store.svelte';
+  import { ACCENTS, addWorkspace, loadTemplate, look, saveWs, ws, wsRoot } from '@/lib/store.svelte';
   import Glyph, { type GlyphName } from './Glyph.svelte';
 
   let { close }: { close: () => void } = $props();
@@ -11,10 +12,11 @@
   const current = ws().name;
   const cur = look();
   let name = $state('');
-  let start = $state<string>('copy'); // 'copy' | 'empty' | 'template:<file>'
+  let start = $state<string>('copy'); // 'copy' | 'empty' | 'blank' | 'template:<file>'
   let theme = $state(cur.theme);
   let accent = $state(cur.accent);
   let lookTouched = $state(false); // a template brings its own look; only override it when asked
+  let keepLocal = $state(isLocal(wsRoot().id)); // where a template's folders go
 
   const template = $derived(start.startsWith('template:') ? start.slice(9) : '');
   const ready = $derived(!!name.trim() || !!template);
@@ -22,6 +24,7 @@
   const starts: { id: string; icon: GlyphName; title: string; desc: string }[] = [
     { id: 'copy', icon: 'copy', title: t('Copy of “{0}”', current), desc: t('Same columns, notes and widgets') },
     { id: 'empty', icon: 'grid', title: t('Empty board'), desc: t('Your bookmarks with the default columns') },
+    { id: 'blank', icon: 'archive', title: t('Blank board'), desc: t('Its own columns, kept in Markboard and not in your browser bookmarks') },
     ...Object.entries(TEMPLATES).map(([file, label]) => ({
       id: 'template:' + file, icon: 'layers' as GlyphName, title: t(label), desc: t('Template: adds its own folders, notes and widgets'),
     })),
@@ -33,12 +36,12 @@
     if (!ready) return;
     if (template) {
       try {
-        await loadTemplate(template, name.trim() || undefined);
+        await loadTemplate(template, name.trim() || undefined, keepLocal);
       } catch {
         return toast(t('Could not load the template'));
       }
     }
-    else addWorkspace(name.trim(), start === 'empty');
+    else await addWorkspace(name.trim(), start as 'copy' | 'empty' | 'blank');
     if (lookTouched || !template) { // the new workspace is current now
       Object.assign(ws().look, { theme, accent });
       saveWs();
@@ -74,6 +77,16 @@
       {/each}
     </div>
   </fieldset>
+
+  {#if template}
+    <div>
+      <span class="nws-label">{t('Keep its folders in')}</span>
+      <div class="seg nit-keep" role="group" aria-label={t('Keep its folders in')}>
+        <button type="button" class:on={!keepLocal} aria-pressed={!keepLocal} onclick={() => (keepLocal = false)}>{t('Browser bookmarks')}</button>
+        <button type="button" class:on={keepLocal} aria-pressed={keepLocal} onclick={() => (keepLocal = true)}>{t('Markboard only')}</button>
+      </div>
+    </div>
+  {/if}
 
   <fieldset class="nws-group">
     <legend class="nws-label">{t('Look')}</legend>

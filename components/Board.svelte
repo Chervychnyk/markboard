@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { clamp } from '@/lib/core';
+  import { clamp, isLocal } from '@/lib/core';
   import { t } from '@/lib/i18n';
   import {
-    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, isFav, look, matchesFilter, sortRows, app, toggleCollapsed, ui, ws, wsRoot,
+    clearFilters, data, deleteSession, dropBookmark, hasActiveFilter, isCollapsed, isDue, isFav, look, matchesFilter, sortRows, app, toggleCollapsed, ui, ws, wsFolders, wsRoot,
   } from '@/lib/store.svelte';
   import type { BNode, Note, Row, Widget } from '@/lib/types';
   import Column from './Column.svelte';
@@ -20,7 +20,7 @@
     const r = wsRoot();
     const favs = data.flat.filter((n) => n.url && isFav(n.id));
     const due = data.flat.filter((n) => isDue(app.meta[n.id] ?? {}));
-    const folders = (r.children ?? []).filter((n) => !n.url);
+    const folders = wsFolders();
     const rootLinks = (r.children ?? []).filter((n) => n.url);
     const all: (Col | false)[] = [
       due.length > 0 && { k: 'reminders', title: t('Reminders'), rows: due, icon: 'bell' },
@@ -184,7 +184,7 @@
             {:else if !subs.length}
               <div class="col-empty">
                 <p>{t('No bookmarks yet')}</p>
-                <p class="col-empty-hint">{t('Add one with + or the ☆ in the address bar')}</p>
+                <p class="col-empty-hint">{isLocal(c.folderId) ? t('Add one with + or the toolbar button') : t('Add one with + or the ☆ in the address bar')}</p>
               </div>
             {/if}
           {/if}

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { favicon } from '@/lib/core';
+  import { favicon, isLocal, LOCAL_ROOT } from '@/lib/core';
   import { toast } from '@/lib/dialogs.svelte';
   import { t } from '@/lib/i18n';
-  import { data, folderOptions, refresh, wsRoot } from '@/lib/store.svelte';
+  import { bm, data, folderOptions, refresh, saveWs, ws, wsRoot } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
   let { close, folder: start, kind }: { close: () => void; folder?: string; kind: 'bookmark' | 'folder' } = $props();
@@ -11,11 +11,18 @@
   let title = $state('');
   let folder = $derived(start ?? wsRoot()?.id ?? ''); // the picked folder overrides it
   const isBookmark = $derived(kind === 'bookmark');
+  // A folder is kept in the browser's bookmarks or in Markboard alone; the picker lists that tree's folders.
+  const localHome = $derived(isLocal(wsRoot().id) ? wsRoot().id : LOCAL_ROOT);
+  const local = $derived(isLocal(folder));
+  const options = $derived(isBookmark ? folderOptions() : folderOptions().filter(([id]) => isLocal(id) === local));
+  function keepIn(toLocal: boolean) {
+    if (toLocal !== local) folder = toLocal ? localHome : isLocal(wsRoot().id) ? data.bar.id : wsRoot().id;
+  }
   const outsideRoot = $derived.by(() => {
     const root = wsRoot();
     let node = data.byId.get(folder);
     while (node) {
-      if (node.id === root.id) return false;
+      if (node.id === root.id || ws().cols.includes(node.id)) return false;
       node = node.parentId ? data.byId.get(node.parentId) : undefined;
     }
     return true;
@@ -38,8 +45,13 @@
     e.preventDefault();
     if (!ready) return;
     const name = title.trim() || host;
-    await browser.bookmarks.create({ parentId: folder, title: name, ...(isBookmark && { url: link!.href }) })
-      .then(() => { close(); return refresh(); })
+    const column = !isBookmark && local && outsideRoot; // a Markboard folder outside the root joins this board instead
+    await bm.create({ parentId: folder, title: name, ...(isBookmark && { url: link!.href }) })
+      .then((made) => {
+        if (column) { ws().cols.push(made.id); saveWs(); }
+        close();
+        return refresh();
+      })
       .catch((err) => toast(err.message));
   }
 </script>
@@ -68,12 +80,24 @@
       placeholder={isBookmark ? host || t('Optional') : t('Work, Reading, Trip…')} />
   </label>
 
+  {#if !isBookmark}
+    <div>
+      <span class="nws-label">{t('Keep in')}</span>
+      <div class="seg nit-keep" role="group" aria-label={t('Keep in')}>
+        <button type="button" class:on={!local} aria-pressed={!local} onclick={() => keepIn(false)}>{t('Browser bookmarks')}</button>
+        <button type="button" class:on={local} aria-pressed={local} onclick={() => keepIn(true)}>{t('Markboard only')}</button>
+      </div>
+    </div>
+  {/if}
+
   <label>
-    <span class="nws-label">{t('Folder')}</span>
+    <span class="nws-label">{isBookmark ? t('Folder') : t('Inside')}</span>
     <select class="st-select nit-folder" bind:value={folder}>
-      {#each folderOptions() as [id, label] (id)}<option value={id}>{label}</option>{/each}
+      {#each options as [id, label] (id)}<option value={id}>{label}</option>{/each}
     </select>
-    {#if !isBookmark && outsideRoot}
+    {#if !isBookmark && local}
+      <p class="nws-hint">{outsideRoot ? t('Added to this board as a column. Not in your browser bookmarks or their sync.') : t('Not in your browser bookmarks or their sync.')}</p>
+    {:else if !isBookmark && outsideRoot}
       <p class="nws-hint warn">{t("Outside board root — won't appear as a column.")}</p>
     {/if}
   </label>

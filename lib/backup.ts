@@ -1,7 +1,7 @@
 import { flatten } from './core.ts';
 import type { Backup, Data } from './types.ts';
 
-const toBase64 = (bytes: Uint8Array) => {
+export const toBase64 = (bytes: Uint8Array) => {
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(s);

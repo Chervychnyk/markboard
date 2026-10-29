@@ -10,9 +10,12 @@ export type TabkitMessage =
   | { type: 'tabkit:register'; name: string } // provider → Tabkit: list my commands in the palette
   | { type: 'tabkit:open' } // provider → Tabkit: open the palette over the sender's tab
   | { type: 'tabkit:commands' } // Tabkit → provider: reply with ProvidedCommand[]
+  | { type: 'tabkit:links' } // Tabkit → provider: reply with ProvidedLink[], searched as bookmarks
   | { type: 'tabkit:run'; command: string; tabId?: number }; // Tabkit → provider
 
 export interface ProvidedCommand { id: string; title: string }
+/** Links outside the browser's bookmarks (Markboard's own folders), so Tabkit's bookmark search finds them too. */
+export interface ProvidedLink { id: string; title: string; url: string }
 
 /** Board commands. `key` is the single-key shortcut on the board; titles are i18n keys. */
 export const COMMANDS: { id: string; title: string; key?: string }[] = [

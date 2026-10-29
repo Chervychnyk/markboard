@@ -416,6 +416,21 @@
         <section class="st-sec">
           <div class="st-bg-panel">
             <label class="st-switch-row">
+              <div>
+                <div class="st-row-title">{t('Sync Markboard folders')}</div>
+                <div class="st-row-desc">{t('Folders kept in Markboard, their tags and the boards on them, through your browser account')}</div>
+                {#if app.sync && app.syncStatus}
+                  {@const kb = Math.max(1, Math.round(app.syncStatus.bytes / 1000))}
+                  <div class="st-row-desc" class:st-warn={!!app.syncStatus.error}>
+                    {app.syncStatus.error === 'size' ? t('Too large to sync: {0} KB of 100 KB', kb)
+                      : app.syncStatus.error ? t('Sync failed: {0}', app.syncStatus.error)
+                      : t('Synced {0} · {1} KB of 100 KB', new Date(app.syncStatus.at).toLocaleString(locale), kb)}
+                  </div>
+                {/if}
+              </div>
+              <input type="checkbox" class="st-switch" checked={app.sync} onchange={(e) => { app.sync = e.currentTarget.checked; save('sync'); }} />
+            </label>
+            <label class="st-switch-row">
               <div><div class="st-row-title">{t('Automatic daily backups (last 7 kept)')}</div><div class="st-row-desc">{t('Saved on this device once a day')}</div></div>
               <input type="checkbox" class="st-switch" checked={app.autoBackup} onchange={(e) => { app.autoBackup = e.currentTarget.checked; save('autoBackup'); }} />
             </label>

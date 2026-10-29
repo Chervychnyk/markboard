@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Browser } from 'wxt/browser';
-  import { favicon, flatten, LOOK_DEFAULTS, search } from '@/lib/core';
+  import { emptyLocal, favicon, flatten, insertNode, isLocal, LOOK_DEFAULTS, search } from '@/lib/core';
   import { t } from '@/lib/i18n';
   import { FONTS, HEX } from '@/lib/store.svelte';
   import type { BNode, Data, Look, Meta } from '@/lib/types';
@@ -35,7 +35,7 @@
   const parentName = (id?: string) => flat.find((n) => n.id === id)?.title ?? '';
 
   onMount(async () => {
-    const stored = (await browser.storage.local.get(['workspaces', 'ws', 'meta'])) as Partial<Data>;
+    const stored = (await browser.storage.local.get(['workspaces', 'ws', 'meta', 'local'])) as Partial<Data>;
     meta = stored.meta ?? {};
     const w = stored.workspaces?.[stored.ws ?? ''];
     favs = w?.favs ?? [];
@@ -47,13 +47,23 @@
     [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     name = tab?.title ?? '';
     const [tree] = await browser.bookmarks.getTree();
-    flat = flatten(tree!.children ?? []);
-    recent = await browser.bookmarks.getRecent(8).catch(() => []);
-    if (tab?.url) saved = (await browser.bookmarks.search({ url: tab.url }).catch(() => [])).length > 0;
+    flat = flatten([...tree!.children ?? [], stored.local ?? emptyLocal()]);
+    const localLinks = flat.filter((n) => n.url && isLocal(n.id));
+    recent = [...await browser.bookmarks.getRecent(8).catch(() => []), ...localLinks].sort((a, b) => (b.dateAdded ?? 0) - (a.dateAdded ?? 0));
+    if (tab?.url) saved = localLinks.some((n) => n.url === tab!.url) || (await browser.bookmarks.search({ url: tab.url }).catch(() => [])).length > 0;
   });
 
+  // Markboard folders keep web pages only, as the board does.
+  const canSave = $derived(!!tab?.url && (!isLocal(folder) || /^https?:\/\//.test(tab.url)));
+
   async function saveTab() {
-    await browser.bookmarks.create({ parentId: folder, title: name.trim() || tab!.title, url: tab!.url });
+    const title = name.trim() || tab!.title;
+    if (!isLocal(folder)) await browser.bookmarks.create({ parentId: folder, title, url: tab!.url });
+    else { // read just before writing, so an open board's changes since this popup opened are kept
+      const { local = emptyLocal() } = (await browser.storage.local.get('local')) as Partial<Data>;
+      insertNode(local, folder, { title, url: tab!.url });
+      await browser.storage.local.set({ local });
+    }
     saved = true;
   }
 
@@ -136,7 +146,7 @@
           <select aria-label={t('Folder')} bind:value={folder}>
             {#each flat.filter((n) => !n.url) as f (f.id)}<option value={f.id}>{f.title}</option>{/each}
           </select>
-          <button class="btn primary" disabled={saved || !tab.url} onclick={saveTab}>
+          <button class="btn primary" disabled={saved || !canSave} onclick={saveTab}>
             {#if saved}<Glyph name="check" size={14} />{/if}{saved ? t('Saved') : t('Save')}
           </button>
         </div>

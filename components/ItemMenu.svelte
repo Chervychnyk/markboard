@@ -2,7 +2,7 @@
   import { toast } from '@/lib/dialogs.svelte';
   import { locale, t } from '@/lib/i18n';
   import {
-    closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, isFav, isHidden, mark, metaOf, moveStep, setMeta, setRemind, ui,
+    bm, closeItemMenu, COLORS, data, deleteFromMenu, folderOptions, hideFromMenu, isFav, isHidden, mark, metaOf, moveStep, setMeta, setRemind, ui,
   } from '@/lib/store.svelte';
   import Glyph from './Glyph.svelte';
 
@@ -82,7 +82,7 @@
     const folderId = e.currentTarget.value;
     e.currentTarget.value = '';
     if (!n || !folderId || folderId === n.parentId) return;
-    await browser.bookmarks.move(n.id, { parentId: folderId }).catch((err) => toast(err.message));
+    await bm.move(n.id, { parentId: folderId }).catch((err) => toast(err.message));
     closeItemMenu();
   }
 
@@ -169,7 +169,7 @@
             value={n.title}
             aria-label={t('Title')}
             placeholder={t('Title')}
-            onchange={(e) => browser.bookmarks.update(n.id, { title: e.currentTarget.value }).catch((err) => toast(err.message))}
+            onchange={(e) => bm.update(n.id, { title: e.currentTarget.value }).catch((err) => toast(err.message))}
           />
           <input
             class="im-icon-input"
@@ -192,7 +192,7 @@
             value={n.url}
             aria-label={t('URL')}
             placeholder={t('URL')}
-            onchange={(e) => browser.bookmarks.update(n.id, { url: e.currentTarget.value }).catch((err) => toast(err.message))}
+            onchange={(e) => bm.update(n.id, { url: e.currentTarget.value }).catch((err) => toast(err.message))}
           />
         {/if}
       </div>

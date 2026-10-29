@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '@/lib/i18n';
-  import { createFolder, data, deleteNote, newNote, saveWs, ws, wsRoot } from '@/lib/store.svelte';
+  import { createFolder, data, deleteNote, newNote, saveWs, ws, wsFolders } from '@/lib/store.svelte';
   import { WIDGETS } from '@/lib/widgets';
   import Glyph from './Glyph.svelte';
   import NoteBody from './NoteBody.svelte';
@@ -10,8 +10,7 @@
   let tab = $derived<'widgets' | 'folders'>(list ? 'folders' : 'widgets');
 
   const w = $derived(ws());
-  const root = $derived(wsRoot());
-  const folders = $derived((root.children ?? []).filter((n) => !n.url));
+  const folders = $derived(wsFolders());
   const childCount = (id: string) => data.byId.get(id)?.children?.length ?? 0;
 
   function addWidget(e: Event & { currentTarget: HTMLSelectElement }) {
